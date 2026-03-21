@@ -4,11 +4,13 @@ const cors = require('cors');
 const { Duffel } = require('@duffel/api');
 
 const app = express();
-const port = 3000;
 
-// Initialisation avec la version d'API recommandée
+// CORRECTION RENDER : Le port doit être dynamique
+const port = process.env.PORT || 3000; 
+
+// Initialisation avec la version d'API recommandée via variable d'environnement
 const duffel = new Duffel({
-  token: "duffel_test_7rynzjziE2bqOVrUqm6aNZT4CHg7J2YCQBS6fdRLvRz"
+  token: process.env.DUFFEL_TOKEN 
 });
 
 app.use(cors());
@@ -52,8 +54,6 @@ app.post('/search-flights', async (req, res) => {
 });
 
 // --- CRÉATION DE RÉSERVATION (PNR) ---
-// ... (tes imports restent les mêmes)
-
 app.post('/book-flight', async (req, res) => {
     const { offer_id, passengers, email } = req.body;
 
@@ -99,10 +99,12 @@ app.post('/book-flight', async (req, res) => {
         });
     }
 });
+
 app.get('/', (req, res) => {
   res.send('TERMINAL GDS TERRA VOYAGE : ONLINE 🟢');
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Terminal running on http://localhost:${port}`);
+// CORRECTION RENDER : Écouter sur '0.0.0.0' est nécessaire pour certains environnements Cloud
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Terminal running on port ${port}`);
 });
