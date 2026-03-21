@@ -122,6 +122,13 @@
             border-radius: 0;
         }
     }
+        .label-premium {
+    @apply block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2;
+  }
+  .input-premium {
+    @apply w-full border-b-2 border-gray-100 py-3 font-bold text-lg focus:border-red-600 outline-none transition-all;
+  }
+  .mono { font-family: 'Space Mono', monospace; } /* Optionnel, selon ta police */
 </style>
 </head>
 <body class="antialiased text-black">
@@ -509,38 +516,45 @@
             }
 
             data.offers.forEach(offer => {
-                const segment = offer.slices[0].segments[0];
-                resultsDiv.innerHTML += `
-                    <div class="flight-card flex flex-col md:flex-row items-stretch mb-4">
-                        <div class="p-8 bg-gray-50/50 flex flex-col justify-center items-center border-r border-gray-100 md:w-48 text-center">
-                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-2">${offer.owner.name}</span>
-                            <div class="text-2xl font-black italic tracking-tighter text-red-600">${offer.owner.iata_code}</div>
-                        </div>
-                        <div class="flex-1 grid grid-cols-3 p-10 items-center">
-                            <div class="text-left">
-                                <span class="block mono text-2xl font-bold tracking-tighter">${segment.departing_at.substring(11,16)}</span>
-                                <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.origin.iata_code}</span>
-                            </div>
-                            <div class="px-8">
-                                <div class="relative flex items-center justify-center">
-                                    <div class="w-full h-[1px] bg-gray-200"></div>
-                                    <div class="absolute bg-white px-3 mono text-[8px] text-gray-400 font-bold italic tracking-widest uppercase">Direct</div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <span class="block mono text-2xl font-bold tracking-tighter">${segment.arriving_at.substring(11,16)}</span>
-                                <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.destination.iata_code}</span>
-                            </div>
-                        </div>
-                        <div class="p-8 md:w-72 flex flex-col justify-center items-end bg-black text-white group">
-                            <span class="mono text-2xl font-black tracking-tighter mb-3">${offer.total_amount} <span class="text-xs font-normal text-gray-500">${offer.total_currency}</span></span>
-                            <button onclick="selectOffer('${offer.id}', '${offer.total_amount}', '${offer.total_currency}', '${offer.owner.name}')" 
-                                class="w-full py-4 bg-blue-600 text-[9px] font-black tracking-[0.3em] hover:bg-white hover:text-black transition-all uppercase shadow-lg">
-                                SELECT_OFFER
-                            </button>
-                        </div>
-                    </div>`;
-            });
+    const segment = offer.slices[0].segments[0];
+    
+    // --- LOGIQUE DE CONVERSION OPTION B ---
+    const rate = 1.09; // Taux EUR -> USD approximatif
+    const priceInEur = parseFloat(offer.total_amount);
+    const priceInUsd = (priceInEur * rate).toFixed(2);
+    // ---------------------------------------
+
+    resultsDiv.innerHTML += `
+        <div class="flight-card flex flex-col md:flex-row items-stretch mb-4">
+            <div class="p-8 bg-gray-50/50 flex flex-col justify-center items-center border-r border-gray-100 md:w-48 text-center">
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-2">${offer.owner.name}</span>
+                <div class="text-2xl font-black italic tracking-tighter text-red-600">${offer.owner.iata_code}</div>
+            </div>
+            <div class="flex-1 grid grid-cols-3 p-10 items-center">
+                <div class="text-left">
+                    <span class="block mono text-2xl font-bold tracking-tighter">${segment.departing_at.substring(11,16)}</span>
+                    <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.origin.iata_code}</span>
+                </div>
+                <div class="px-8">
+                    <div class="relative flex items-center justify-center">
+                        <div class="w-full h-[1px] bg-gray-200"></div>
+                        <div class="absolute bg-white px-3 mono text-[8px] text-gray-400 font-bold italic tracking-widest uppercase">Direct</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="block mono text-2xl font-bold tracking-tighter">${segment.arriving_at.substring(11,16)}</span>
+                    <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.destination.iata_code}</span>
+                </div>
+            </div>
+            <div class="p-8 md:w-72 flex flex-col justify-center items-end bg-black text-white group">
+                <span class="mono text-2xl font-black tracking-tighter mb-3">${priceInUsd} <span class="text-xs font-normal text-gray-500">USD</span></span>
+                <button onclick="selectOffer('${offer.id}', '${priceInUsd}', 'USD', '${offer.owner.name}')" 
+                    class="w-full py-4 bg-blue-600 text-[9px] font-black tracking-[0.3em] hover:bg-white hover:text-black transition-all uppercase shadow-lg">
+                    SELECT_OFFER
+                </button>
+            </div>
+        </div>`;
+});
         } catch (e) { 
             resultsDiv.innerHTML = `<div class="p-10 mono text-red-500 text-[10px] text-center font-bold tracking-widest uppercase italic">Error: GDS_CONNECTION_FAILED // Check API URL</div>`; 
         }
@@ -679,10 +693,32 @@
     });
 
     window.addEventListener('scroll', function() {
-        const header = document.getElementById('mainHeader');
-        if (window.scrollY > 50) { header.classList.add('scrolled'); } 
-        else { header.classList.remove('scrolled'); }
-    });
+    const header = document.getElementById('mainHeader');
+    const logo = document.getElementById('headerLogo');
+    if (window.scrollY > 50) {
+        header.classList.add('bg-black', 'h-16'); // Header plus compact
+        header.classList.remove('bg-black/40', 'h-20');
+        logo.style.height = "60px"; // Logo plus petit au scroll
+    } else {
+        header.classList.add('bg-black/40', 'h-20');
+        header.classList.remove('bg-black', 'h-16');
+        logo.style.height = "80px";
+    }
+});
+    // --- GESTION DU MENU MOBILE ---
+const menuBtn = document.getElementById('menuBtn');
+const closeMenuBtn = document.getElementById('closeMenuBtn');
+const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+const mobileOverlay = document.getElementById('mobileOverlay');
+
+function toggleMenu() {
+    mobileMenuPanel.classList.toggle('translate-x-full');
+    mobileOverlay.classList.toggle('hidden');
+}
+
+menuBtn.onclick = toggleMenu;
+closeMenuBtn.onclick = toggleMenu;
+mobileOverlay.onclick = toggleMenu;
 </script>
 </body>
 </html>
