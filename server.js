@@ -55,7 +55,7 @@ app.post('/search-flights', async (req, res) => {
         const offerRequest = await duffel.offerRequests.create({
             slices: slices,
             // Duffel attend un tableau d'objets passagers
-            passengers: Array.from({ length: parseInt(passengers) || 1 }, () => ({ type: "adult" })),
+            passengers: Array.from({ length: Number(passengers) && Number(passengers) > 0 ? Number(passengers) : 1 }, () => ({ type: "adult" })),
             cabin_class: cabinClass || "economy", // Valeur par défaut si vide
             return_offers: true
         });
