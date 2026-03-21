@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terra Voyage | Premium Travel Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Montserrat:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">    
+    <style>
+    :root { 
+        --accent: #dc2626; 
+        --premium-black: #0a0a0a;
+    }
+
+    /* Configuration de base */
+    body { 
+        font-family: 'Montserrat', sans-serif; 
+        background-color: #fff; 
+        color: #000; 
+        overflow-x: hidden; /* Empêche le scroll horizontal sur mobile */
+    }
+    
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* --- HEADER & LOGO RESPONSIVE --- */
+    header {
+        overflow: visible !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    header.scrolled {
+        height: 64px !important;
+        background-color: rgba(0, 0, 0, 0.9) !important;
+        backdrop-blur: 15px;
+    }
+
+    #headerLogo {
+        filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+        transition: all 0.5s h-20 ease-in-out;
+        max-width: none; /* Évite l'écrasement */
+    }
+
+    /* Ajustement précis de la taille du logo selon l'écran */
+    @media (max-width: 768px) {
+        #headerLogo { height: 60px; }
+        header.scrolled #headerLogo { height: 45px; }
+    }
+
+    /* --- HERO & BACKGROUNDS --- */
+    .hero-bg {
+        position: relative;
+        background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?q=80&w=2070'); /* Image par défaut */
+        background-size: cover;
+        background-position: center;
+        background-attachment: scroll; /* Meilleur pour les performances mobiles que 'fixed' */
+    }
+
+    @media (min-width: 1024px) {
+        .hero-bg { background-attachment: fixed; }
+    }
+
+    
+    /* --- COMPOSANTS PREMIUM --- */
+    .input-premium { 
+        width: 100%;
+        background-color: #f9fafb;
+        border: 1px solid #f3f4f6;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        outline: none;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .input-premium:focus {
+        background-color: #fff;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
+    }
+
+    .label-premium { 
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    /* --- UTILS & ANIMATIONS --- */
+    .animate-fade-in {
+        animation: fadeIn 1s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Support du mode sombre forcé (navigateur) */
+    @media (prefers-color-scheme: dark) {
+        #mobileMenuPanel { background-color: #fff; color: #000; } /* On force le blanc pour garder le style premium */
+    }
+
+    /* Masquage de la scrollbar sur le tiroir de réservation */
+    #drawerContent::-webkit-scrollbar {
+        width: 4px;
+    }
+    #drawerContent::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+    }
+
+    /* Correction Mobile pour le tiroir (Drawer) */
+    @media (max-width: 640px) {
+        #bookingDrawer {
+            width: 100% !important;
+            border-radius: 0;
+        }
+    }
+</style>
+</head>
+<body class="antialiased text-black">
+
+<header id="mainHeader" class="fixed top-0 left-0 w-full z-50 bg-black/40 backdrop-blur-md border-b border-red-700/30 text-white h-20 transition-all duration-400">
+    <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+        <div class="flex items-center relative h-full w-32 md:w-40">
+    <img src="https://i.postimg.cc/j5VzVV3c/YABISO-VOYAGE-20251216-035622-0000-removebg-preview.png" 
+         class="h-20 md:h-28 w-auto absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-500 ease-in-out" 
+         id="headerLogo"
+         alt="Terra Voyage logo"> 
+</div>        
+        <nav class="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-widest">
+            <a href="#home" class="hover:text-red-500 transition-colors">Accueil</a> 
+            <a href="#destinations" class="hover:text-red-500 transition-colors">Destinations</a> 
+            <a href="#services" class="hover:text-red-500 transition-colors">Services</a> 
+            <a href="#about" class="hover:text-red-500 transition-colors">À propos</a> 
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <a href="https://wa.me/243854442103" class="hidden md:inline-flex px-6 py-2.5 rounded-full bg-red-700 hover:bg-red-800 text-[10px] font-black tracking-widest uppercase transition-all shadow-lg shadow-red-900/20">WhatsApp</a> 
+            <button id="menuBtn" class="md:hidden text-2xl">☰</button>
+        </div>
+    </div>
+</header>
+<div id="mobileOverlay" class="fixed inset-0 bg-black/70 hidden z-[60] transition-opacity duration-300"></div>
+<div id="mobileMenuPanel" class="fixed top-0 right-0 h-screen w-4/5 max-w-sm bg-white text-black shadow-2xl transform translate-x-full transition-transform duration-300 ease-out z-[70] flex flex-col px-6 pt-8">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-black italic uppercase">Terra<span class="text-red-600">Voyage</span></h3>
+        <button id="closeMenuBtn" class="text-3xl">&times;</button>
+    </div>
+    <nav class="flex-1 overflow-y-auto flex flex-col gap-5 text-sm font-bold uppercase tracking-wider">
+        <a href="#home" onclick="toggleMenu()">Accueil</a> 
+        <a href="#destinations" onclick="toggleMenu()">Destinations</a> 
+        <a href="#services" onclick="toggleMenu()">Services</a> 
+        <hr class="border-gray-100">
+        <a href="#hotels" onclick="toggleMenu()" class="text-gray-400 hover:text-red-600">Hôtels</a> 
+        <a href="#insurance" onclick="toggleMenu()" class="text-gray-400 hover:text-red-600">Assurance</a> 
+        <a href="https://wa.me/243854442103" class="mt-4 inline-flex items-center justify-center px-4 py-4 rounded-xl bg-red-600 text-white">Contact WhatsApp</a>
+    </nav>
+</div>
+<section class="hero-bg min-h-[85vh] flex flex-col items-center justify-center px-6 pt-24 text-center">
+    <h1 class="text-white text-4xl md:text-7xl font-black tracking-tighter mb-4 animate-fade-in">EXPLOREZ LE MONDE.</h1>
+    <p class="text-gray-200 text-lg mb-12 max-w-2xl font-light">Accédez à l'infrastructure GDS mondiale avec une simplicité premium.</p>
+
+    <div class="w-full max-w-6xl bg-white rounded-3xl p-8 shadow-2xl">
+        <div class="flex gap-6 mb-8 border-b border-gray-100 pb-4">
+            <button onclick="setTripType('one_way')" id="btn-one-way" class="text-[10px] font-black tracking-widest text-red-600 border-b-2 border-red-600 pb-2">ALLER SIMPLE</button>
+            <button onclick="setTripType('round_trip')" id="btn-round-trip" class="text-[10px] font-black tracking-widest text-red-600 pb-2 hover:text-gray">ALLER-RETOUR</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
+            <div>
+                <label class="label-premium">Départ</label>
+                <input id="origin" type="text" placeholder="Kinshasa (FIH)" class="input-premium uppercase">
+            </div>
+            <div>
+                <label class="label-premium">Arrivée</label>
+                <input id="destination" type="text" placeholder="Paris (CDG)" class="input-premium uppercase">
+            </div>
+            <div>
+                <label class="label-premium">Date Départ</label>
+                <input id="departureDate" type="text" class="input-premium mono">
+            </div>
+            <div id="returnContainer" class="opacity-30 pointer-events-none transition-all">
+                <label class="label-premium">Date Retour</label>
+                <input id="returnDate" type="text" class="input-premium mono">
+            </div>
+        </div>
+
+        <div class="mt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex gap-8">
+                <div>
+                    <label class="label-premium">Classe</label>
+                    <select id="cabinClass" class="font-bold text-sm outline-none cursor-pointer bg-white">
+                        <option value="economy">Économique</option>
+                        <option value="premium_economy">Premium</option>
+                        <option value="business">Business</option>
+                        <option value="first">First Class</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label-premium">Voyageurs</label>
+                    <select id="passengers" class="font-bold text-sm outline-none cursor-pointer bg-white">
+                        <option value="1">1 Adulte</option>
+                        <option value="2">2 Adultes</option>
+                    </select>
+                </div>
+            </div>
+            <button id="searchBtn" class="w-full md:w-auto bg-red-600 text-white px-12 py-5 rounded-2xl text-[11px] font-black tracking-[0.2em] hover:bg-black transition-all uppercase shadow-lg shadow-blue-200">
+                Rechercher des Vols
+            </button>
+        </div>
+    </div>
+</section>
+
+<main class="max-w-7xl mx-auto py-20 px-6">
+    <div id="results" class="space-y-6"></div>
+</main>
+<section id="about" class="py-24 bg-gray-950 text-white overflow-hidden relative">
+    <div class="absolute top-0 right-0 w-1/2 h-full bg-red-600/5 -skew-x-12 translate-x-32"></div>
+
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div class="relative">
+                <div class="aspect-square rounded-[3rem] overflow-hidden shadow-2xl">
+                    <img src="https://images.unsplash.com/photo-1530521954074-e64f6810b32d?q=80&w=2070" alt="About Terra" class="w-full h-full object-cover">
+                </div>
+                <div class="absolute -bottom-10 -right-10 bg-white p-8 rounded-3xl hidden md:block">
+                    <p class="text-black font-black text-4xl tracking-tighter italic">10Y+</p>
+                    <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">D'expertise GDS</p>
+                </div>
+            </div>
+
+            <div>
+                <p class="mono text-[10px] text-red-600 font-bold tracking-[0.5em] uppercase mb-6">L'Agence</p>
+                <h2 class="text-4xl md:text-6xl font-black tracking-tighter uppercase italic mb-8 leading-none">Redéfinir <br>le <span class="text-red-600">Voyage.</span></h2>
+                <div class="space-y-6 text-gray-400 text-lg font-light leading-relaxed">
+                    <p>Terra Voyage n'est pas une simple agence de tourisme. Nous sommes le pont entre la technologie aéronautique de pointe et vos désirs d'évasion.</p>
+                    <p>En intégrant nativement les systèmes de distribution mondiaux (GDS), nous offrons à nos clients une transparence tarifaire absolue et un accès privilégié aux meilleures classes de voyage des plus grandes compagnies mondiales.</p>
+                </div>
+                
+                <div class="mt-12 flex gap-8">
+                    <div>
+                        <p class="text-white font-bold text-2xl tracking-tighter">Premium</p>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest">Standard de service</p>
+                    </div>
+                    <div class="border-l border-gray-800 pl-8">
+                        <p class="text-white font-bold text-2xl tracking-tighter">Global</p>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-widest">Couverture réseau</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="destinations" class="py-24 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <h2 class="text-3xl font-black tracking-tighter mb-12 uppercase italic">Top Destinations <span class="text-red-600">Terra</span></h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-xl">
+                <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2073" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8 text-white">
+                    <span class="text-xs font-bold tracking-widest uppercase mb-2">Europe</span>
+                    <h3 class="text-2xl font-black tracking-tighter">PARIS, FRANCE</h3>
+                </div>
+            </div>
+            <div class="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-xl">
+                <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=2070" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8 text-white">
+                    <span class="text-xs font-bold tracking-widest uppercase mb-2">Middle East</span>
+                    <h3 class="text-2xl font-black tracking-tighter">DUBAI, UAE</h3>
+                </div>
+            </div>
+            <div class="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-xl">
+                <img src="https://images.unsplash.com/photo-1570527141186-e391a3914c42?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8 text-white">
+                    <span class="text-xs font-bold tracking-widest uppercase mb-2">Africa</span>
+                    <h3 class="text-2xl font-black tracking-tighter">CAPE TOWN, ZA</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="services" class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div class="max-w-2xl">
+                <p class="mono text-[10px] text-red-600 font-bold tracking-[0.5em] uppercase mb-4">Nos Solutions</p>
+                <h2 class="text-4xl md:text-6xl font-black tracking-tighter uppercase italic text-black">L'excellence <span class="text-gray-300">opérationnelle.</span></h2>
+            </div>
+            <p class="text-gray-500 max-w-xs text-sm font-medium">Une technologie de pointe connectée aux inventaires mondiaux pour des tarifs et une disponibilité en temps réel.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div class="group p-10 rounded-[2rem] bg-gray-50 hover:bg-black transition-all duration-500 border border-gray-100 hover:border-black">
+                <div class="w-12 h-12 bg-red-600 rounded-xl mb-8 flex items-center justify-center text-white shadow-lg shadow-red-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-extrabold mb-4 group-hover:text-white uppercase tracking-tight">Accès GDS Mondial</h3>
+                <p class="text-gray-500 group-hover:text-gray-400 text-sm leading-relaxed">Connectez-vous instantanément aux bases de données d'Amadeus et Sabre pour des options de vol illimitées.</p>
+            </div>
+
+            <div class="group p-10 rounded-[2rem] bg-gray-50 hover:bg-black transition-all duration-500 border border-gray-100 hover:border-black">
+                <div class="w-12 h-12 bg-black group-hover:bg-red-600 rounded-xl mb-8 flex items-center justify-center text-white shadow-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-extrabold mb-4 group-hover:text-white uppercase tracking-tight">Assurance Premium</h3>
+                <p class="text-gray-500 group-hover:text-gray-400 text-sm leading-relaxed">Voyagez l'esprit tranquille avec nos partenariats exclusifs Allianz et AXA pour une protection intégrale.</p>
+            </div>
+
+            <div class="group p-10 rounded-[2rem] bg-gray-50 hover:bg-black transition-all duration-500 border border-gray-100 hover:border-black">
+                <div class="w-12 h-12 bg-black group-hover:bg-red-600 rounded-xl mb-8 flex items-center justify-center text-white shadow-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-extrabold mb-4 group-hover:text-white uppercase tracking-tight">Support 24/7</h3>
+                <p class="text-gray-500 group-hover:text-gray-400 text-sm leading-relaxed">Une assistance dédiée via WhatsApp et ligne directe pour gérer vos urgences de voyage partout dans le monde.</p>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="partners" class="py-24 bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <p class="mono text-[10px] text-gray-400 font-bold tracking-[0.5em] mb-16 uppercase">Partenaires Mondiaux & GDS</p>
+        
+        <div class="swiper partnerSwiper">
+            <div class="swiper-wrapper flex items-center">
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Air_France_Logo.svg/250px-Air_France_Logo.svg.png" alt="Air France" class="h-10 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Emirates_logo.svg/250px-Emirates_logo.svg.png" alt="Emirates" class="h-14 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://cdn.worldvectorlogo.com/logos/qatar-airways-1.svg" alt="Qatar Airways" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://cdn.worldvectorlogo.com/logos/logo-ethiopian-airlines.svg" alt="Ethiopian Airlines" class="h-14 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://cdn.worldvectorlogo.com/logos/turkish-airlines-logo.svg" alt="Turkish Airlines" class="h-14 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://cdn.worldvectorlogo.com/logos/bookingcom-1.svg" alt="Booking.com" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://cdn.worldvectorlogo.com/logos/allianz-1.svg" alt="Allianz" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+                <div class="swiper-slide flex justify-center items-center px-8">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Brussels_Airlines.svg/1200px-Brussels_Airlines.svg.png" alt="Brussels Airlines" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<footer class="bg-black text-white py-20">
+    <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-gray-900 pb-16">
+        <div class="col-span-2">
+            <span class="text-3xl font-black italic tracking-tighter uppercase mb-6 block">Terra<span class="text-red-600 not-italic">Voyage</span></span>
+            <p class="text-gray-500 font-light max-w-sm">La nouvelle norme du voyage haut de gamme. Intégration directe aux GDS mondiaux pour une transparence et une rapidité inégalées.</p>
+        </div>
+        <div>
+            <h4 class="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-red-600">Légal</h4>
+            <ul class="text-gray-500 space-y-4 text-sm font-medium">
+                <li><a href="#" class="hover:text-white transition-all">Conditions Générales</a></li>
+                <li><a href="#" class="hover:text-white transition-all">Confidentialité</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4 class="text-xs font-bold tracking-[0.3em] uppercase mb-6 text-red-600">Suivez-nous</h4>
+            <div class="flex gap-4">
+                <a href="#" class="h-10 w-10 bg-gray-900 rounded-full flex items-center justify-center hover:bg-blue-600 transition-all">IG</a>
+                <a href="#" class="h-10 w-10 bg-gray-900 rounded-full flex items-center justify-center hover:bg-blue-600 transition-all">TW</a>
+                <a href="#" class="h-10 w-10 bg-gray-900 rounded-full flex items-center justify-center hover:bg-blue-600 transition-all">LK</a>
+            </div>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-6 pt-12 flex justify-between items-center text-[10px] mono text-gray-600">
+        <span>© 2026 TERRA VOYAGE GDS SYSTEM. TOUS DROITS RÉSERVÉS.</span>
+        <span class="animate-pulse">SYSTEM_STATUS: OK_GREEN</span>
+    </div>
+</footer>
+
+<div id="bookingDrawer" class="fixed inset-y-0 right-0 w-full md:w-[600px] bg-white shadow-2xl transform translate-x-full transition-transform duration-700 z-[60] flex flex-col">
+    <div class="p-8 border-b border-gray-100 flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-black tracking-tighter uppercase italic">Réservation <span class="text-red-600">GDS</span></h2>
+            <p class="mono text-[9px] text-gray-400 mt-1 uppercase tracking-widest italic italic">Transaction Sécurisée via Terra Cloud</p>
+        </div>
+        <button onclick="closeDrawer()" class="h-12 w-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all text-2xl">&times;</button>
+    </div>
+    
+    <div id="drawerContent" class="flex-1 overflow-y-auto p-12 space-y-12">
+        <div id="flightSummary" class="p-8 bg-blue-50/50 rounded-3xl border border-blue-100 mono text-[11px] text-blue-900 space-y-1 italic"></div>
+        <div class="space-y-8">
+            <div class="grid grid-cols-2 gap-8">
+                <div>
+                    <label class="label-premium text-black">Prénom</label>
+                    <input id="pax-first" type="text" class="input-premium bg-gray-100">
+                </div>
+                <div>
+                    <label class="label-premium text-black">Nom</label>
+                    <input id="pax-last" type="text" class="input-premium bg-gray-100">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-8">
+                <div>
+                    <label class="label-premium text-black">Date de Naissance</label>
+                    <input id="pax-dob" type="date" class="input-premium bg-gray-100">
+                </div>
+                <div>
+                    <label class="label-premium text-black">Sexe</label>
+                    <select id="pax-gender" class="input-premium bg-gray-100">
+                        <option value="m">Homme (M)</option>
+                        <option value="f">Femme (F)</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="label-premium text-black">Email de Contact</label>
+                <input id="pax-email" type="email" placeholder="client@email.com" class="input-premium bg-gray-100">
+            </div>
+        </div>
+    </div>
+
+    <div id="drawerFooter" class="p-10 bg-gray-50 border-t border-gray-100">
+        <div class="flex justify-between items-end mb-8">
+            <span class="mono text-[10px] text-gray-500 font-bold uppercase tracking-widest italic">Montant Total TTC</span>
+            <span id="finalPrice" class="text-4xl font-black tracking-tighter text-red-600">---</span>
+        </div>
+        <button id="confirmBookingBtn" class="w-full bg-blue-600 text-white py-6 rounded-2xl text-[11px] font-black tracking-[0.4em] hover:bg-black transition-all shadow-xl uppercase shadow-blue-200">
+            Finaliser la Réservation
+        </button>
+    </div>
+</div>
+
+<div id="overlay" onclick="closeDrawer()" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[55]"></div>
+
+<script>
+    let tripType = 'one_way';
+    let selectedOfferId = null;
+    
+    // Initialisation des calendriers
+    const departureFp = flatpickr("#departureDate", { dateFormat: "Y-m-d", minDate: "today" });
+    const returnFp = flatpickr("#returnDate", { dateFormat: "Y-m-d", minDate: "today" });
+
+    function setTripType(type) {
+        tripType = type;
+        const returnContainer = document.getElementById('returnContainer');
+        const b1 = document.getElementById('btn-one-way');
+        const b2 = document.getElementById('btn-round-trip');
+
+        if (type === 'round_trip') {
+            returnContainer.classList.remove('opacity-20', 'pointer-events-none');
+            b2.className = "text-xs font-black tracking-widest text-red-600 border-b-2 border-blue-600 pb-2";
+            b1.className = "text-xs font-black tracking-widest text-gray-300 pb-2";
+        } else {
+            returnContainer.classList.add('opacity-20', 'pointer-events-none');
+            b1.className = "text-xs font-black tracking-widest text-red-600 border-b-2 border-blue-600 pb-2";
+            b2.className = "text-xs font-black tracking-widest text-gray-300 pb-2";
+            returnFp.clear();
+        }
+    }
+
+    // --- RECHERCHE DE VOLS ---
+    document.getElementById("searchBtn").onclick = async () => {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = `
+            <div class="p-20 flex flex-col items-center">
+                <div class="loader-bar mb-4 max-w-xs"></div>
+                <span class="mono text-[10px] text-gray-400 animate-pulse italic">ESTABLISHING_GDS_HANDSHAKE...</span>
+            </div>`;
+
+        try {
+            const res = await fetch("http://localhost:3000/search-flights", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    origin: document.getElementById("origin").value.toUpperCase(),
+                    destination: document.getElementById("destination").value.toUpperCase(),
+                    departureDate: document.getElementById("departureDate").value,
+                    returnDate: document.getElementById("returnDate").value,
+                    cabinClass: document.getElementById("cabinClass").value,
+                    passengers: document.getElementById("passengers").value,
+                    tripType: tripType
+                })
+            });
+
+            const data = await res.json();
+            resultsDiv.innerHTML = "";
+
+            if (!data.offers || data.offers.length === 0) {
+                resultsDiv.innerHTML = `<div class="p-10 mono text-gray-400 text-[10px] text-center uppercase tracking-widest">0_OFFERS_FOUND_FOR_THIS_QUERY</div>`;
+                return;
+            }
+
+            data.offers.forEach(offer => {
+                const segment = offer.slices[0].segments[0];
+                resultsDiv.innerHTML += `
+                    <div class="flight-card flex flex-col md:flex-row items-stretch mb-4">
+                        <div class="p-8 bg-gray-50/50 flex flex-col justify-center items-center border-r border-gray-100 md:w-48 text-center">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-2">${offer.owner.name}</span>
+                            <div class="text-2xl font-black italic tracking-tighter text-red-600">${offer.owner.iata_code}</div>
+                        </div>
+                        <div class="flex-1 grid grid-cols-3 p-10 items-center">
+                            <div class="text-left">
+                                <span class="block mono text-2xl font-bold tracking-tighter">${segment.departing_at.substring(11,16)}</span>
+                                <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.origin.iata_code}</span>
+                            </div>
+                            <div class="px-8">
+                                <div class="relative flex items-center justify-center">
+                                    <div class="w-full h-[1px] bg-gray-200"></div>
+                                    <div class="absolute bg-white px-3 mono text-[8px] text-gray-400 font-bold italic tracking-widest uppercase">Direct</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="block mono text-2xl font-bold tracking-tighter">${segment.arriving_at.substring(11,16)}</span>
+                                <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.destination.iata_code}</span>
+                            </div>
+                        </div>
+                        <div class="p-8 md:w-72 flex flex-col justify-center items-end bg-black text-white group">
+                            <span class="mono text-2xl font-black tracking-tighter mb-3">${offer.total_amount} <span class="text-xs font-normal text-gray-500">${offer.total_currency}</span></span>
+                            <button onclick="selectOffer('${offer.id}', '${offer.total_amount}', '${offer.total_currency}', '${offer.owner.name}')" 
+                                class="w-full py-4 bg-blue-600 text-[9px] font-black tracking-[0.3em] hover:bg-white hover:text-black transition-all uppercase shadow-lg">
+                                SELECT_OFFER
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        } catch (e) { 
+            resultsDiv.innerHTML = `<div class="p-10 mono text-red-500 text-[10px] text-center font-bold tracking-widest uppercase italic">Error: GDS_CONNECTION_FAILED // Check Server.js</div>`; 
+        }
+    };
+
+    function selectOffer(id, price, currency, airline) {
+        selectedOfferId = id;
+        document.getElementById('finalPrice').innerText = `${price} ${currency}`;
+        document.getElementById('flightSummary').innerHTML = `
+            <div class="mb-3 font-black text-red-600 tracking-widest uppercase border-b border-blue-200 pb-1">>>> FARE_RESERVED_V3</div>
+            <span class="text-gray-500">CARRIER:</span> ${airline.toUpperCase()}<br>
+            <span class="text-gray-500">OFFER_ID:</span> ${id}<br>
+            <span class="text-gray-500">STATUS:</span> HK1_GUARANTEED_PRICE`;
+        
+        document.getElementById('bookingDrawer').classList.remove('translate-x-full');
+        document.getElementById('overlay').classList.remove('hidden');
+    }
+
+    function closeDrawer() {
+        document.getElementById('bookingDrawer').classList.add('translate-x-full');
+        document.getElementById('overlay').classList.add('hidden');
+    }
+
+    // --- CRÉATION DE LA RÉSERVATION (PNR) ---
+    document.getElementById('confirmBookingBtn').onclick = async () => {
+        const firstName = document.getElementById('pax-first').value;
+        const lastName = document.getElementById('pax-last').value;
+        const email = document.getElementById('pax-email').value;
+        const dob = document.getElementById('pax-dob').value;
+        const gender = document.getElementById('pax-gender').value;
+
+        if(!firstName || !lastName || !email || !dob) {
+            return alert("CRITICAL: INCOMPLETE_PASSENGER_DATA");
+        }
+
+        const btn = document.getElementById('confirmBookingBtn');
+        btn.innerText = ">> COMMITTING_TO_CORE...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch("http://localhost:3000/book-flight", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+    offer_id: selectedOfferId,
+    email: email,
+    // On récupère les valeurs stockées lors de selectOffer
+    total_amount: document.getElementById('finalPrice').innerText.split(' ')[0],
+    total_currency: document.getElementById('finalPrice').innerText.split(' ')[1],
+    passengers: [{ 
+        first_name: firstName, 
+        last_name: lastName, 
+        gender: gender,
+        born_on: dob 
+    }]
+})            
+
+});
+
+            const data = await res.json();
+            
+            if(data.success) {
+                const now = new Date().toLocaleString();
+                const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${data.booking_reference}&choe=UTF-8`;
+                
+                // On remplace le contenu du tiroir par le billet final Premium
+                const pnrContent = `
+                    <div id="pnr-to-print" class="bg-[#0a0a0a] text-white p-10 mono text-[11px] border-l-4 border-blue-600 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-[60px] font-black italic">TERRA</div>
+                        <div class="flex justify-between items-start mb-10 border-b border-gray-800 pb-6 relative z-10">
+                            <div>
+                                <h2 class="text-2xl font-black italic tracking-tighter uppercase">Terra Voyage</h2>
+                                <p class="text-[9px] text-blue-500 tracking-[0.4em]">OFFICIAL_ITINERARY_DOCUMENT</p>
+                            </div>
+                            <img src="${qrUrl}" class="bg-white p-2" width="80" alt="PNR_QR">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-y-4 mb-10 relative z-10">
+                            <div><p class="text-gray-500 uppercase text-[9px]">Record Locator (PNR)</p><p class="text-lg font-bold text-blue-400 bg-blue-900/20 inline-block px-2">${data.booking_reference}</p></div>
+                            <div class="text-right"><p class="text-gray-500 uppercase text-[9px]">Issue Date</p><p class="text-white">${now}</p></div>
+                            <div><p class="text-gray-500 uppercase text-[9px]">Passenger Name</p><p class="text-white font-bold">${lastName.toUpperCase()} / ${firstName.toUpperCase()}</p></div>
+                            <div class="text-right"><p class="text-gray-500 uppercase text-[9px]">System Status</p><p class="text-green-500 font-black tracking-widest">CONFIRMED_HK1</p></div>
+                        </div>
+
+                        <div class="border-t border-dashed border-gray-800 pt-8 relative z-10">
+                            <p class="text-blue-500 font-black mb-4 tracking-widest uppercase italic">>> Itinerary_Manifest</p>
+                            <div class="bg-gray-900/50 p-6 rounded text-gray-300 leading-relaxed italic">
+                                ${document.getElementById('flightSummary').innerHTML}
+                            </div>
+                        </div>
+
+                        <div class="mt-12 space-y-3 no-print">
+                            <button onclick="window.print()" class="w-full bg-white text-black py-5 text-[10px] font-black tracking-[0.3em] hover:bg-blue-600 hover:text-white transition-all uppercase">PRINT_OFFICIAL_PDF</button>
+                            <button onclick="location.reload()" class="w-full text-gray-500 text-[8px] hover:text-white transition-all tracking-[0.2em] underline uppercase">Terminate Session</button>
+                        </div>
+                    </div>`;
+                
+                document.getElementById('drawerContent').innerHTML = pnrContent;
+                document.getElementById('drawerFooter').classList.add('hidden');
+            } else { 
+                alert("GDS_REJECTION: " + (data.details?.[0]?.message || data.message)); 
+            }
+        } catch (e) { 
+            alert("SYSTEM_CRITICAL_FAILURE: Verify Node.js logs"); 
+        } finally { 
+            btn.disabled = false; 
+            btn.innerText = "Create_Final_PNR"; 
+        }
+    };
+    const images = [
+    "https://images.unsplash.com/photo-1496497243327-9dccd845c35f?q=80&w=2000",
+    "https://images.unsplash.com/photo-1669238658622-49ca0506cfb1?q=80&w=2000",
+    "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000",
+    "https://images.unsplash.com/photo-1484318571209-661cf29a69c3?q=80&w=2000"
+];
+
+let currentIndex = 0;
+const heroSection = document.querySelector('.hero-bg');
+
+function changeBackground() {
+    // Applique l'image avec le dégradé pour la lisibilité
+    heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${images[currentIndex]}')`;
+    currentIndex = (currentIndex + 1) % images.length;
+}
+
+// Initialisation et intervalle (toutes les 5 secondes)
+changeBackground();
+setInterval(changeBackground, 5000);
+// Initialisation de Swiper pour les partenaires
+const swiper = new Swiper('.partnerSwiper', {
+    slidesPerView: 2,
+    spaceBetween: 30,
+    loop: true,
+    speed: 5000, // Vitesse du défilement
+    autoplay: {
+        delay: 0,
+        disableOnInteraction: false,
+    },
+    breakpoints: {
+        640: { slidesPerView: 3 },
+        1024: { slidesPerView: 5 },
+    },
+    allowTouchMove: false, // Défilement automatique continu
+});
+window.addEventListener('scroll', function() {
+    const header = document.getElementById('mainHeader');
+    if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+    } else {
+        header.classList.remove('scrolled');
+    }
+});
+</script>
+</body>
+</html>
