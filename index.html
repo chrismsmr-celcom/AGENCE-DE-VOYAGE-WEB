@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Montserrat:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
     :root { 
         --accent: #dc2626; 
@@ -122,13 +124,6 @@
             border-radius: 0;
         }
     }
-        .label-premium {
-    @apply block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2;
-  }
-  .input-premium {
-    @apply w-full border-b-2 border-gray-100 py-3 font-bold text-lg focus:border-red-600 outline-none transition-all;
-  }
-  .mono { font-family: 'Space Mono', monospace; } /* Optionnel, selon ta police */
 </style>
 </head>
 <body class="antialiased text-black">
@@ -454,9 +449,6 @@
 <div id="overlay" onclick="closeDrawer()" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[55]"></div>
 
 <script>
-    // CONFIGURATION URL - Remplace par ton URL Render réelle
-    const API_BASE_URL = "https://agence-de-voyage-web.onrender.com"; 
-
     let tripType = 'one_way';
     let selectedOfferId = null;
     
@@ -483,101 +475,103 @@
     }
 
     // --- RECHERCHE DE VOLS ---
-    document.getElementById("searchBtn").onclick = async () => {
-        const resultsDiv = document.getElementById("results");
-        resultsDiv.innerHTML = `
-            <div class="p-20 flex flex-col items-center">
-                <div class="loader-bar mb-4 max-w-xs"></div>
-                <span class="mono text-[10px] text-gray-400 animate-pulse italic">ESTABLISHING_GDS_HANDSHAKE...</span>
-            </div>`;
-
-        try {
-            // CORRECTION : On utilise API_BASE_URL + /search-flights
-            const res = await fetch(`${API_BASE_URL}/search-flights`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    origin: document.getElementById("origin").value.toUpperCase(),
-                    destination: document.getElementById("destination").value.toUpperCase(),
-                    departureDate: document.getElementById("departureDate").value,
-                    returnDate: document.getElementById("returnDate").value,
-                    cabinClass: document.getElementById("cabinClass").value,
-                    passengers: document.getElementById("passengers").value,
-                    tripType: tripType
-                })
-            });
-
-            const data = await res.json();
-            resultsDiv.innerHTML = "";
-
-            if (!data.offers || data.offers.length === 0) {
-                resultsDiv.innerHTML = `<div class="p-10 mono text-gray-400 text-[10px] text-center uppercase tracking-widest">0_OFFERS_FOUND_FOR_THIS_QUERY</div>`;
-                return;
-            }
-
-            data.offers.forEach(offer => {
-    const segment = offer.slices[0].segments[0];
-    
-    // --- LOGIQUE DE CONVERSION OPTION B ---
-    const rate = 1.09; // Taux EUR -> USD approximatif
-    const priceInEur = parseFloat(offer.total_amount);
-    const priceInUsd = (priceInEur * rate).toFixed(2);
-    // ---------------------------------------
-
-    resultsDiv.innerHTML += `
-        <div class="flight-card flex flex-col md:flex-row items-stretch mb-4">
-            <div class="p-8 bg-gray-50/50 flex flex-col justify-center items-center border-r border-gray-100 md:w-48 text-center">
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-2">${offer.owner.name}</span>
-                <div class="text-2xl font-black italic tracking-tighter text-red-600">${offer.owner.iata_code}</div>
-            </div>
-            <div class="flex-1 grid grid-cols-3 p-10 items-center">
-                <div class="text-left">
-                    <span class="block mono text-2xl font-bold tracking-tighter">${segment.departing_at.substring(11,16)}</span>
-                    <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.origin.iata_code}</span>
-                </div>
-                <div class="px-8">
-                    <div class="relative flex items-center justify-center">
-                        <div class="w-full h-[1px] bg-gray-200"></div>
-                        <div class="absolute bg-white px-3 mono text-[8px] text-gray-400 font-bold italic tracking-widest uppercase">Direct</div>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="block mono text-2xl font-bold tracking-tighter">${segment.arriving_at.substring(11,16)}</span>
-                    <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.destination.iata_code}</span>
-                </div>
-            </div>
-            <div class="p-8 md:w-72 flex flex-col justify-center items-end bg-black text-white group">
-                <span class="mono text-2xl font-black tracking-tighter mb-3">${priceInUsd} <span class="text-xs font-normal text-gray-500">USD</span></span>
-                <button onclick="selectOffer('${offer.id}', '${priceInUsd}', 'USD', '${offer.owner.name}')" 
-                    class="w-full py-4 bg-blue-600 text-[9px] font-black tracking-[0.3em] hover:bg-white hover:text-black transition-all uppercase shadow-lg">
-                    SELECT_OFFER
-                </button>
-            </div>
+document.getElementById("searchBtn").onclick = async () => {
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = `
+        <div class="p-20 flex flex-col items-center">
+            <div class="loader-bar mb-4 max-w-xs"></div>
+            <span class="mono text-[10px] text-gray-400 animate-pulse italic">ESTABLISHING_GDS_HANDSHAKE...</span>
         </div>`;
-});
-        } catch (e) { 
-            resultsDiv.innerHTML = `<div class="p-10 mono text-red-500 text-[10px] text-center font-bold tracking-widest uppercase italic">Error: GDS_CONNECTION_FAILED // Check API URL</div>`; 
+
+    try {
+        const res = await fetch("http://localhost:3000/search-flights", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                origin: document.getElementById("origin").value.toUpperCase(),
+                destination: document.getElementById("destination").value.toUpperCase(),
+                departureDate: document.getElementById("departureDate").value,
+                returnDate: document.getElementById("returnDate").value,
+                cabinClass: document.getElementById("cabinClass").value,
+                passengers: document.getElementById("passengers").value,
+                tripType: tripType
+            })
+        });
+
+        const data = await res.json();
+        resultsDiv.innerHTML = "";
+
+        if (!data.offers || data.offers.length === 0) {
+            resultsDiv.innerHTML = `<div class="p-10 mono text-gray-400 text-[10px] text-center uppercase tracking-widest">0_OFFERS_FOUND_FOR_THIS_QUERY</div>`;
+            return;
         }
-    };
 
-    function selectOffer(id, price, currency, airline) {
-        selectedOfferId = id;
-        document.getElementById('finalPrice').innerText = `${price} ${currency}`;
-        document.getElementById('flightSummary').innerHTML = `
-            <div class="mb-3 font-black text-red-600 tracking-widest uppercase border-b border-blue-200 pb-1">>>> FARE_RESERVED_V3</div>
-            <span class="text-gray-500">CARRIER:</span> ${airline.toUpperCase()}<br>
-            <span class="text-gray-500">OFFER_ID:</span> ${id}<br>
-            <span class="text-gray-500">STATUS:</span> HK1_GUARANTEED_PRICE`;
-        
-        document.getElementById('bookingDrawer').classList.remove('translate-x-full');
-        document.getElementById('overlay').classList.remove('hidden');
+        data.offers.forEach(offer => {
+            const segment = offer.slices[0].segments[0];
+            
+            // --- LOGIQUE DE CONVERSION USD (Option B) ---
+            const rate = 1.09; 
+            const priceInUsd = (parseFloat(offer.total_amount) * rate).toFixed(2);
+
+            resultsDiv.innerHTML += `
+                <div class="flight-card flex flex-col md:flex-row items-stretch mb-4 animate-fade-in">
+                    <div class="p-8 bg-gray-50/50 flex flex-col justify-center items-center border-r border-gray-100 md:w-48 text-center">
+                        <img src="https://logos.skyscnr.com/images/airlines/favicon/${offer.owner.iata_code}.png" 
+                             alt="${offer.owner.name}" 
+                             class="w-10 h-10 object-contain mb-3 filter grayscale hover:grayscale-0 transition-all duration-500">
+                        
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-2">${offer.owner.name}</span>
+                        <div class="text-2xl font-black italic tracking-tighter text-red-600">${offer.owner.iata_code}</div>
+                    </div>
+
+                    <div class="flex-1 grid grid-cols-3 p-10 items-center">
+                        <div class="text-left">
+                            <span class="block mono text-2xl font-bold tracking-tighter">${segment.departing_at.substring(11,16)}</span>
+                            <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.origin.iata_code}</span>
+                        </div>
+                        <div class="px-8">
+                            <div class="relative flex items-center justify-center">
+                                <div class="w-full h-[1px] bg-gray-200"></div>
+                                <div class="absolute bg-white px-3 mono text-[8px] text-gray-400 font-bold italic tracking-widest uppercase">Direct</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="block mono text-2xl font-bold tracking-tighter">${segment.arriving_at.substring(11,16)}</span>
+                            <span class="text-[10px] font-bold text-gray-300 uppercase">${segment.destination.iata_code}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-8 md:w-72 flex flex-col justify-center items-end bg-black text-white group">
+                        <span class="mono text-2xl font-black tracking-tighter mb-3">${priceInUsd} <span class="text-xs font-normal text-gray-500">USD</span></span>
+                        <button onclick="selectOffer('${offer.id}', '${priceInUsd}', 'USD', '${offer.owner.name}')" 
+                            class="w-full py-4 bg-blue-600 text-[9px] font-black tracking-[0.3em] hover:bg-white hover:text-black transition-all uppercase shadow-lg">
+                            SELECT_OFFER
+                        </button>
+                    </div>
+                </div>`;
+        });
+    } catch (e) { 
+        resultsDiv.innerHTML = `<div class="p-10 mono text-red-500 text-[10px] text-center font-bold tracking-widest uppercase italic">Error: GDS_CONNECTION_FAILED // Check Server.js</div>`; 
     }
+};
 
-    function closeDrawer() {
-        document.getElementById('bookingDrawer').classList.add('translate-x-full');
-        document.getElementById('overlay').classList.add('hidden');
-    }
+function selectOffer(id, price, currency, airline) {
+    selectedOfferId = id;
+    document.getElementById('finalPrice').innerText = `${price} ${currency}`;
+    document.getElementById('flightSummary').innerHTML = `
+        <div class="mb-3 font-black text-red-600 tracking-widest uppercase border-b border-blue-200 pb-1">>>> FARE_RESERVED_V3</div>
+        <span class="text-gray-500 italic">CARRIER:</span> ${airline.toUpperCase()}<br>
+        <span class="text-gray-500 italic">OFFER_ID:</span> ${id}<br>
+        <span class="text-gray-500 italic">STATUS:</span> HK1_GUARANTEED_PRICE`;
+    
+    document.getElementById('bookingDrawer').classList.remove('translate-x-full');
+    document.getElementById('overlay').classList.remove('hidden');
+}
 
+function closeDrawer() {
+    document.getElementById('bookingDrawer').classList.add('translate-x-full');
+    document.getElementById('overlay').classList.add('hidden');
+}
     // --- CRÉATION DE LA RÉSERVATION (PNR) ---
     document.getElementById('confirmBookingBtn').onclick = async () => {
         const firstName = document.getElementById('pax-first').value;
@@ -595,23 +589,24 @@
         btn.disabled = true;
 
         try {
-            // CORRECTION : On utilise API_BASE_URL + /book-flight
-            const res = await fetch(`${API_BASE_URL}/book-flight`, {
+            const res = await fetch("http://localhost:3000/book-flight", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    offer_id: selectedOfferId,
-                    email: email,
-                    total_amount: document.getElementById('finalPrice').innerText.split(' ')[0],
-                    total_currency: document.getElementById('finalPrice').innerText.split(' ')[1],
-                    passengers: [{ 
-                        first_name: firstName, 
-                        last_name: lastName, 
-                        gender: gender,
-                        born_on: dob 
-                    }]
-                })
-            });
+    offer_id: selectedOfferId,
+    email: email,
+    // On récupère les valeurs stockées lors de selectOffer
+    total_amount: document.getElementById('finalPrice').innerText.split(' ')[0],
+    total_currency: document.getElementById('finalPrice').innerText.split(' ')[1],
+    passengers: [{ 
+        first_name: firstName, 
+        last_name: lastName, 
+        gender: gender,
+        born_on: dob 
+    }]
+})            
+
+});
 
             const data = await res.json();
             
@@ -619,6 +614,7 @@
                 const now = new Date().toLocaleString();
                 const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${data.booking_reference}&choe=UTF-8`;
                 
+                // On remplace le contenu du tiroir par le billet final Premium
                 const pnrContent = `
                     <div id="pnr-to-print" class="bg-[#0a0a0a] text-white p-10 mono text-[11px] border-l-4 border-blue-600 shadow-2xl relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10 text-[60px] font-black italic">TERRA</div>
@@ -656,69 +652,55 @@
                 alert("GDS_REJECTION: " + (data.details?.[0]?.message || data.message)); 
             }
         } catch (e) { 
-            alert("SYSTEM_CRITICAL_FAILURE: Verify Node.js logs on Render"); 
+            alert("SYSTEM_CRITICAL_FAILURE: Verify Node.js logs"); 
         } finally { 
             btn.disabled = false; 
             btn.innerText = "Create_Final_PNR"; 
         }
     };
-
-    // --- GESTION BACKGROUND & UI ---
     const images = [
-        "https://images.unsplash.com/photo-1496497243327-9dccd845c35f?q=80&w=2000",
-        "https://images.unsplash.com/photo-1669238658622-49ca0506cfb1?q=80&w=2000",
-        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000",
-        "https://images.unsplash.com/photo-1484318571209-661cf29a69c3?q=80&w=2000"
-    ];
+    "https://images.unsplash.com/photo-1496497243327-9dccd845c35f?q=80&w=2000",
+    "https://images.unsplash.com/photo-1669238658622-49ca0506cfb1?q=80&w=2000",
+    "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2000",
+    "https://images.unsplash.com/photo-1484318571209-661cf29a69c3?q=80&w=2000"
+];
 
-    let currentIndex = 0;
-    const heroSection = document.querySelector('.hero-bg');
+let currentIndex = 0;
+const heroSection = document.querySelector('.hero-bg');
 
-    function changeBackground() {
-        heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${images[currentIndex]}')`;
-        currentIndex = (currentIndex + 1) % images.length;
-    }
-
-    changeBackground();
-    setInterval(changeBackground, 5000);
-
-    const swiper = new Swiper('.partnerSwiper', {
-        slidesPerView: 2,
-        spaceBetween: 30,
-        loop: true,
-        speed: 5000,
-        autoplay: { delay: 0, disableOnInteraction: false },
-        breakpoints: { 640: { slidesPerView: 3 }, 1024: { slidesPerView: 5 } },
-        allowTouchMove: false,
-    });
-
-    window.addEventListener('scroll', function() {
-    const header = document.getElementById('mainHeader');
-    const logo = document.getElementById('headerLogo');
-    if (window.scrollY > 50) {
-        header.classList.add('bg-black', 'h-16'); // Header plus compact
-        header.classList.remove('bg-black/40', 'h-20');
-        logo.style.height = "60px"; // Logo plus petit au scroll
-    } else {
-        header.classList.add('bg-black/40', 'h-20');
-        header.classList.remove('bg-black', 'h-16');
-        logo.style.height = "80px";
-    }
-});
-    // --- GESTION DU MENU MOBILE ---
-const menuBtn = document.getElementById('menuBtn');
-const closeMenuBtn = document.getElementById('closeMenuBtn');
-const mobileMenuPanel = document.getElementById('mobileMenuPanel');
-const mobileOverlay = document.getElementById('mobileOverlay');
-
-function toggleMenu() {
-    mobileMenuPanel.classList.toggle('translate-x-full');
-    mobileOverlay.classList.toggle('hidden');
+function changeBackground() {
+    // Applique l'image avec le dégradé pour la lisibilité
+    heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${images[currentIndex]}')`;
+    currentIndex = (currentIndex + 1) % images.length;
 }
 
-menuBtn.onclick = toggleMenu;
-closeMenuBtn.onclick = toggleMenu;
-mobileOverlay.onclick = toggleMenu;
+// Initialisation et intervalle (toutes les 5 secondes)
+changeBackground();
+setInterval(changeBackground, 5000);
+// Initialisation de Swiper pour les partenaires
+const swiper = new Swiper('.partnerSwiper', {
+    slidesPerView: 2,
+    spaceBetween: 30,
+    loop: true,
+    speed: 5000, // Vitesse du défilement
+    autoplay: {
+        delay: 0,
+        disableOnInteraction: false,
+    },
+    breakpoints: {
+        640: { slidesPerView: 3 },
+        1024: { slidesPerView: 5 },
+    },
+    allowTouchMove: false, // Défilement automatique continu
+});
+window.addEventListener('scroll', function() {
+    const header = document.getElementById('mainHeader');
+    if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+    } else {
+        header.classList.remove('scrolled');
+    }
+});
 </script>
 </body>
 </html>
