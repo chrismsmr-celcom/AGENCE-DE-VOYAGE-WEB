@@ -484,7 +484,7 @@ document.getElementById("searchBtn").onclick = async () => {
         </div>`;
 
     try {
-        const res = await fetch("http://localhost:3000/search-flights", {
+        const res = await fetch("https://agence-de-voyage-web.onrender.com/search-flights", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -589,7 +589,7 @@ function closeDrawer() {
         btn.disabled = true;
 
         try {
-            const res = await fetch("http://localhost:3000/book-flight", {
+            const res = await fetch("https://agence-de-voyage-web.onrender.com/book-flight", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
