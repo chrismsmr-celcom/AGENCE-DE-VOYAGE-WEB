@@ -84,6 +84,12 @@ app.post('/search-flights', async (req, res) => {
 // --- RECHERCHE D'HÔTELS (HOTELBEDS) ---
 app.post('/search-hotels', async (req, res) => {
     const { destinationCode, checkIn, checkOut, adults } = req.body;
+    
+    // Sécurité : Vérification des données entrantes
+    if (!destinationCode || !checkIn || !checkOut) {
+        return res.status(400).json({ error: "Dates ou destination manquantes" });
+    }
+
     const signature = getHotelbedsSignature();
 
     try {
@@ -97,16 +103,25 @@ app.post('/search-hotels', async (req, res) => {
             },
             body: JSON.stringify({
                 stay: { checkIn, checkOut },
-                occupancies: [{ rooms: 1, adults: parseInt(adults) || 1, children: 0 }],
+                occupancies: [{ 
+                    rooms: 1, 
+                    adults: parseInt(adults) || 1, 
+                    children: 0 
+                }],
+                // Correction ici : Hotelbeds attend souvent un code de zone ou une destination précise
                 destination: { code: destinationCode.toUpperCase() } 
             })
         });
 
         const data = await response.json();
-        res.json(data);
+        
+        // Hotelbeds renvoie parfois les hôtels dans data.hotels.hotels
+        res.json({ 
+            hotels: data.hotels ? data.hotels.hotels : [] 
+        });
     } catch (error) {
         console.error("❌ ERREUR HOTELBEDS:", error.message);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Erreur interne GDS" });
     }
 });
 
