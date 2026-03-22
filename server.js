@@ -9,18 +9,13 @@ const PORT = process.env.PORT || 10000;
 
 // --- MIDDLEWARES ---
 app.use(cors());
-app.use(express.json()); // Crucial pour req.body
+app.use(express.json());
 
 // --- INITIALISATION DUFFEL ---
-console.log("Vérification de la configuration...");
-
-// On gère les deux noms possibles pour ton token
 const duffelToken = process.env.DUFFEL_TOKEN || process.env.DUFFEL_ACCESS_TOKEN;
 
 if (!duffelToken) {
-    console.error("❌ ERREUR CRITIQUE : Token Duffel manquant dans l'environnement !");
-} else {
-    console.log("✅ Token Duffel détecté (Type: " + (duffelToken.startsWith('duffel_test') ? 'TEST' : 'LIVE') + ")");
+    console.error("❌ ERREUR : Token Duffel manquant !");
 }
 
 const duffel = new Duffel({
@@ -34,10 +29,8 @@ function getHotelbedsSignature() {
     return crypto.createHash('sha256').update(data).digest('hex');
 }
 
-// --- RECHERCHE DE VOLS (DUFFEL) ---
+// --- RECHERCHE DE VOLS ---
 app.post('/search-flights', async (req, res) => {
-    console.log("Requête reçue /search-flights");
-    
     const { origin, destination, departureDate, returnDate, cabinClass, passengers, tripType } = req.body;
 
     if (!origin || !destination || !departureDate) {
@@ -59,35 +52,27 @@ app.post('/search-flights', async (req, res) => {
             });
         }
 
-        // On s'assure que passengers est un nombre
-        const count = parseInt(passengers) || 1;
-
         const offerRequest = await duffel.offerRequests.create({
             slices: slices,
-            passengers: Array.from({ length: count }, () => ({ type: "adult" })),
+            passengers: Array.from({ length: parseInt(passengers) || 1 }, () => ({ type: "adult" })),
             cabin_class: cabinClass || "economy",
             return_offers: true
         });
 
-        console.log(`[DUFFEL] ${offerRequest.data.offers.length} offres trouvées.`);
         res.json({ offers: offerRequest.data.offers || [] });
 
     } catch (error) {
-        console.error("❌ ERREUR DUFFEL DÉTAILLÉE:", JSON.stringify(error.errors || error.message));
-        res.status(400).json({ 
-            error: "Erreur Duffel", 
-            details: error.errors || error.message 
-        });
+        console.error("❌ ERREUR DUFFEL:", error.message);
+        res.status(400).json({ error: "Erreur Duffel", details: error.errors || error.message });
     }
 });
 
-// --- RECHERCHE D'HÔTELS (HOTELBEDS) ---
+// --- RECHERCHE D'HÔTELS ---
 app.post('/search-hotels', async (req, res) => {
     const { destinationCode, checkIn, checkOut, adults } = req.body;
     
-    // Sécurité : Vérification des données entrantes
     if (!destinationCode || !checkIn || !checkOut) {
-        return res.status(400).json({ error: "Dates ou destination manquantes" });
+        return res.status(400).json({ error: "Dates ou destination (Code IATA) manquantes" });
     }
 
     const signature = getHotelbedsSignature();
@@ -96,7 +81,7 @@ app.post('/search-hotels', async (req, res) => {
         const response = await fetch("https://api.test.hotelbeds.com/hotel-booking/1.0/hotels", {
             method: "POST",
             headers: {
-                "Api-key": process.env.HOTELBEDS_API_KEY,
+                "Api-key": process.env.HOTELBEDS_KEY,
                 "X-Signature": signature,
                 "Accept": "application/json",
                 "Content-Type": "application/json"
@@ -108,20 +93,25 @@ app.post('/search-hotels', async (req, res) => {
                     adults: parseInt(adults) || 1, 
                     children: 0 
                 }],
-                // Correction ici : Hotelbeds attend souvent un code de zone ou une destination précise
-                destination: { code: destinationCode.toUpperCase() } 
+                destination: { code: destinationCode.trim().toUpperCase() } 
             })
         });
 
         const data = await response.json();
         
-        // Hotelbeds renvoie parfois les hôtels dans data.hotels.hotels
+        // Sécurité : Vérifier si Hotelbeds renvoie une erreur structurée
+        if (data.error || data.code === "INVALID_DATA") {
+            return res.status(400).json({ error: data.error?.message || "Données invalides pour Hotelbeds" });
+        }
+
+        // On renvoie un objet propre au front
         res.json({ 
-            hotels: data.hotels ? data.hotels.hotels : [] 
+            hotels: data.hotels && data.hotels.hotels ? data.hotels.hotels : [] 
         });
+
     } catch (error) {
         console.error("❌ ERREUR HOTELBEDS:", error.message);
-        res.status(500).json({ error: "Erreur interne GDS" });
+        res.status(500).json({ error: "Erreur de connexion au GDS Hôtels" });
     }
 });
 
@@ -137,13 +127,13 @@ app.post('/book-flight', async (req, res) => {
             selected_offers: [offer_id],
             passengers: passengers.map((p, index) => ({
                 id: gdsPassengers[index].id,
-                title: p.gender === 'm' ? 'mr' : 'ms',
+                title: (p.gender === 'm' || p.gender === 'mr') ? 'mr' : 'ms',
                 given_name: p.first_name,
                 family_name: p.last_name,
-                gender: p.gender === 'm' ? 'm' : 'f',
+                gender: (p.gender === 'm' || p.gender === 'mr') ? 'm' : 'f',
                 born_on: p.born_on,
                 email: email,
-                phone_number: "+33600000000" // Format E.164
+                phone_number: p.phone || "+33600000000"
             })),
             payments: [{
                 type: "balance",
@@ -155,15 +145,12 @@ app.post('/book-flight', async (req, res) => {
         res.json({ success: true, booking_reference: order.data.booking_reference });
     } catch (error) {
         console.error("❌ ERREUR RÉSERVATION:", JSON.stringify(error.errors || error.message));
-        res.status(400).json({ success: false, details: error.errors });
+        res.status(400).json({ success: false, details: error.errors || error.message });
     }
 });
 
-app.get('/', (req, res) => {
-    res.send('TERMINAL GDS TERRA VOYAGE : CONNECTÉ 🟢');
-});
+app.get('/', (req, res) => res.send('GDS TERMINAL : ONLINE 🟢'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Serveur actif sur le port ${PORT}`);
 });
-
