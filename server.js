@@ -110,6 +110,12 @@ app.post('/search-hotels', async (req, res) => {
         });
 
         const data = await response.json();
+
+if (!response.ok) {
+    console.log("Détails erreur Hotelbeds:", data);
+    // Au lieu de crasher, on renvoie une liste vide proprement
+    return res.status(200).json({ hotels: [] }); 
+}
         
         // Log pour débugger dans Render si ça échoue encore
         if (!response.ok) {
