@@ -1,0 +1,393 @@
+/* --- CONFIGURATION GLOBALE --- */
+:root {
+    --travala-blue: #2d83c2;
+    --luxury-black: #1a1a1a;
+    --border-light: #edf2f7;
+    --premium-red: #ff4d4d;
+    --bg-glass: rgba(0, 0, 0, 0.3);
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--luxury-black);
+    background-color: #ffffff;
+    overflow-x: hidden;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* --- HEADER & NAVIGATION --- */
+#mainHeader {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Styles pour l'état scrollé (Fusionnés) */
+#mainHeader.scrolled, .nav-scrolled {
+    height: 70px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+/* État au repos (en haut) */
+.nav-transparent {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0);
+    color: white; /* Texte blanc sur l'image */
+}
+
+/* État lors du scroll */
+.nav-scrolled {
+    background-color: rgba(255, 255, 255, 0.8) !important; /* Blanc semi-transparent */
+    backdrop-filter: blur(10px); /* Effet flou */
+    height: 70px !important; /* Réduction de la hauteur pour dynamiser */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    color: #1a1a1a !important; /* Texte sombre pour la lisibilité */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* On force le logo à repasser en noir quand on scroll */
+.nav-scrolled #logo {
+    brightness: 1;
+    filter: invert(0) !important;
+}
+
+/* Correction du Logo */
+#logo {
+    height: 80px !important;
+    width: auto;
+    object-fit: contain;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left center;
+}
+
+.scrolled #logo, .nav-scrolled #logo {
+    height: 50px !important;
+    transform: scale(0.95);
+    filter: brightness(1) invert(0);
+}
+
+#logo:hover {
+    transform: scale(1.05);
+}
+
+/* --- HERO DYNAMIQUE --- */
+.hero-bg {
+    background-size: cover;
+    background-position: center;
+    transition: background-image 1.5s ease-in-out;
+    position: relative;
+}
+
+.hero-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);
+    z-index: 1;
+}
+
+.hero-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out, transform 10s linear;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.1);
+}
+
+.hero-slide.active { opacity: 1; transform: scale(1); }
+
+.hero-overlay {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(255,255,255,1) 95%);
+}
+
+/* --- TABS (ONGLETS) --- */
+.travala-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 16px 16px 0 0; 
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    background: #f8fafc;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-light);
+    border-bottom: none;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: -1px;
+    z-index: 1;
+    backdrop-filter: blur(5px);
+}
+
+.travala-tab.active {
+    background: #ffffff;
+    color: var(--travala-blue);
+    z-index: 10;
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* --- ICONES DANS LES TABS --- */
+.tab-icon-circle, .tab-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.travala-tab.active .tab-icon-circle, 
+.travala-tab.active .tab-icon {
+    background: var(--travala-blue);
+    color: white;
+}
+
+/* --- LE CONTENEUR DE RECHERCHE --- */
+.search-container-premium {
+    background: white;
+    border-radius: 0 1.8rem 1.8rem 1.8rem;
+    padding: 8px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-light);
+    position: relative;
+    z-index: 5;
+}
+
+/* --- INPUTS & SECTIONS --- */
+.search-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    /* Note: classes utilitaires Tailwind à appliquer dans le HTML pour : text-sm font-bold focus:ring-0 uppercase */
+}
+
+.search-section {
+    transition: background 0.2s ease;
+}
+
+.search-section:hover {
+    background-color: #f8fafc;
+}
+/* Force les sections de recherche à garder une taille cohérente */
+.search-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 120px; /* Évite que ça s'écrase */
+    max-width: 250px; /* Évite que ça pousse tout le reste */
+    border-right: 1px solid #f1f5f9; /* Petite séparation propre */
+}
+
+/* L'input lui-même ne doit pas déborder */
+#mainInput, #originInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    padding: 0;
+}
+/* --- MODALE PASSAGERS (DROPDOWN) --- */
+.passenger-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 320px;
+    background: white;
+    padding: 20px;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border: 1px solid #f1f5f9;
+}
+
+.passenger-dropdown.active {
+    display: block !important;
+    animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- COMPTEURS (+/-) --- */
+.counter-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.counter-btn:hover:not(:disabled) {
+    border-color: var(--travala-blue);
+    color: var(--travala-blue);
+    background: #f0f9ff;
+}
+
+/* --- BOUTONS DE CLASSE --- */
+.cabin-btn {
+        padding: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border: 1px solid #f3f4f6;
+        border-radius: 10px;
+        color: #6b7280;
+        transition: all 0.2s;
+    }
+    .cabin-btn:hover {
+        background-color: #f9fafb;
+        border-color: #e5e7eb;
+    }
+    .active-cabin {
+        background-color: #eff6ff;
+        border-color: #3b82f6;
+        color: #1d4ed8;
+    }
+
+/* --- BADGES & DIVERS --- */
+.new-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #d32f2f;
+    color: white;
+    font-size: 7px;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .travala-tab {
+        padding: 8px 16px;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .tab-icon-circle, .tab-icon {
+        display: none;
+    }
+
+    .search-container-premium {
+        border-radius: 1.5rem;
+    }
+
+    .passenger-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+}
+/* Style pour les options de type de voyage (Aller-retour, etc) */
+#flight-options span {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+#flight-options span:hover {
+    background-color: rgba(59, 130, 246, 0.05); /* Léger bleu au survol */
+    color: #2563eb;
+}
+
+/* Quand l'input radio caché est coché, on cible le span qui suit (+) */
+#flight-options input[type="radio"]:checked + span {
+    color: #2563eb !important;
+    font-weight: 900 !important;
+    position: relative;
+}
+
+/* Petit indicateur sous le texte actif */
+#flight-options input[type="radio"]:checked + span::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: #2563eb;
+    border-radius: 2px;
+}
+
+/* Animation pour l'ajout de lignes multi-villes */
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* --- DESTINATION CARDS --- */
+.destination-card {
+    transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    overflow: hidden;
+    border-radius: 2rem;
+}
+
+.destination-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+}
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-modal-in {
+    animation: modalIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Animation spécifique pour transformer le burger en X */
+/* Animation du burger */
+#burger-icon.before\:rotate-45::before {
+    transform: rotate(45deg) translateY(0) !important;
+}
+#burger-icon.after\:-rotate-45::after {
+    transform: rotate(-45deg) translateY(0) !important;
+}
+
+.nav-transparent {
+    background-color: transparent;
+}
+/* Animation de transformation en X */
+#burger-icon.active {
+    background-color: transparent !important; /* La barre du milieu disparaît */
+}
+
+#burger-icon.active::before {
+    transform: rotate(45deg) translateY(0) !important;
+    background-color: black !important; /* Force la couleur noire sur le fond blanc du menu */
+}
+
+#burger-icon.active::after {
+    transform: rotate(-45deg) translateY(0) !important;
+    background-color: black !important;
+}
