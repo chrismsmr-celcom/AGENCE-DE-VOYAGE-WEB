@@ -152,7 +152,59 @@ app.post('/book-flight', async (req, res) => {
         res.status(400).json({ success: false, details: error.errors || error.message });
     }
 });
+// --- RÉCUPÉRER LES DÉTAILS D'UNE OFFRE (Optimisé avec SDK) ---
+app.get('/get-offer/:id', async (req, res) => {
+    try {
+        // On utilise le SDK déjà initialisé plus haut
+        const offer = await duffel.offers.get(req.params.id);
+        res.json(offer); // Le SDK renvoie déjà le bon format { data: { ... } }
+    } catch (error) {
+        console.error("❌ ERREUR GET OFFER:", error.message);
+        res.status(404).json({ error: "Offre introuvable ou expirée" });
+    }
+});
 
+// --- RÉSERVATION DE VOL (Version Robuste) ---
+app.post('/book-flight', async (req, res) => {
+    const { offer_id, passengers, email, phone } = req.body;
+
+    try {
+        // 1. Récupérer l'offre pour avoir les IDs passagers requis par Duffel
+        const offer = await duffel.offers.get(offer_id);
+        const duffelPassengers = offer.data.passengers;
+
+        // 2. Création de l'ordre
+        const order = await duffel.orders.create({
+            type: "hold", // IMPORTANT: On utilise 'hold' pour Terra Voyage
+            selected_offers: [offer_id],
+            passengers: passengers.map((p, index) => ({
+                id: duffelPassengers[index].id, // On lie l'ID de l'offre au passager
+                title: p.title || "mr",
+                given_name: p.given_name,
+                family_name: p.family_name,
+                gender: p.gender || "m",
+                born_on: p.born_on,
+                email: email,
+                phone_number: phone || "+243000000000"
+            })),
+            // On ne met pas de 'payments' ici car on est en mode 'hold'
+        });
+
+        res.json({ 
+            success: true, 
+            booking_reference: order.data.booking_reference,
+            id: order.data.id // ID interne Duffel pour le paiement plus tard
+        });
+
+    } catch (error) {
+        console.error("❌ ERREUR RÉSERVATION:", JSON.stringify(error.errors || error.message));
+        res.status(400).json({ 
+            success: false, 
+            message: "La réservation a échoué",
+            details: error.errors 
+        });
+    }
+});
 app.get('/', (req, res) => res.send('GDS TERMINAL : ONLINE 🟢'));
 
 app.listen(PORT, '0.0.0.0', () => {
