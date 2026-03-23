@@ -13,24 +13,18 @@ app.use(express.json());
 
 // --- INITIALISATION DUFFEL ---
 const duffelToken = process.env.DUFFEL_TOKEN || process.env.DUFFEL_ACCESS_TOKEN;
+if (!duffelToken) console.error("❌ ERREUR : Token Duffel manquant !");
 
-if (!duffelToken) {
-    console.error("❌ ERREUR : Token Duffel manquant !");
-}
-
-const duffel = new Duffel({
-    token: duffelToken || ""
-});
+const duffel = new Duffel({ token: duffelToken || "" });
 
 // --- UTILITAIRE : SIGNATURE HOTELBEDS ---
 function getHotelbedsSignature() {
     const timestamp = Math.floor(Date.now() / 1000);
-    // Utilisation stricte de HOTELBEDS_KEY comme sur ton Render
     const apiKey = process.env.HOTELBEDS_KEY;
     const secret = process.env.HOTELBEDS_SECRET;
     
     if (!apiKey || !secret) {
-        console.error("❌ Clés Hotelbeds manquantes dans les variables d'environnement !");
+        console.error("❌ Clés Hotelbeds manquantes !");
         return null;
     }
 
@@ -69,7 +63,6 @@ app.post('/search-flights', async (req, res) => {
         });
 
         res.json({ offers: offerRequest.data.offers || [] });
-
     } catch (error) {
         console.error("❌ ERREUR DUFFEL:", error.message);
         res.status(400).json({ error: "Erreur Duffel", details: error.errors || error.message });
@@ -78,22 +71,21 @@ app.post('/search-flights', async (req, res) => {
 
 // --- RECHERCHE D'HÔTELS ---
 app.post('/search-hotels', async (req, res) => {
-    // On accepte destinationCode OU city pour être compatible avec ton front
     const { destinationCode, city, checkIn, checkOut, adults } = req.body;
     const finalCityCode = (destinationCode || city || "").trim().toUpperCase();
 
     if (!finalCityCode || !checkIn || !checkOut) {
-        return res.status(400).json({ error: "Données manquantes : Code ville, check-in ou check-out." });
+        return res.status(400).json({ error: "Données manquantes (Code ville, dates)." });
     }
 
     const signature = getHotelbedsSignature();
-    if (!signature) return res.status(500).json({ error: "Erreur de configuration serveur (Signature)" });
+    if (!signature) return res.status(500).json({ error: "Erreur Signature" });
 
     try {
         const response = await fetch("https://api.test.hotelbeds.com/hotel-booking/1.0/hotels", {
             method: "POST",
             headers: {
-                "Api-key": process.env.HOTELBEDS_KEY, // On utilise bien ta clé Render
+                "Api-key": process.env.HOTELBEDS_KEY,
                 "X-Signature": signature,
                 "Accept": "application/json",
                 "Content-Type": "application/json"
@@ -109,27 +101,21 @@ app.post('/search-hotels', async (req, res) => {
             })
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({})); // Évite le crash si JSON invalide
 
-if (!response.ok) {
-    console.log("Détails erreur Hotelbeds:", data);
-    // Au lieu de crasher, on renvoie une liste vide proprement
-    return res.status(200).json({ hotels: [] }); 
-}
-        
-        // Log pour débugger dans Render si ça échoue encore
         if (!response.ok) {
-            console.error("❌ HOTELBEDS API ERROR:", data);
-            return res.status(response.status).json({ error: data.error?.message || "Erreur API Hotelbeds" });
+            console.warn("⚠️ HOTELBEDS API REJECTED:", data);
+            // On renvoie une liste vide au lieu d'une erreur 500 pour ne pas faire planter le front
+            return res.json({ hotels: [] }); 
         }
 
-        res.json({ 
-            hotels: data.hotels && data.hotels.hotels ? data.hotels.hotels : [] 
-        });
+        // Renvoi propre des données
+        const hotelList = data.hotels && data.hotels.hotels ? data.hotels.hotels : [];
+        res.json({ hotels: hotelList });
 
     } catch (error) {
-        console.error("❌ CRITICAL SERVER ERROR:", error.message);
-        res.status(500).json({ error: "Le serveur n'a pas pu contacter le fournisseur d'hôtels." });
+        console.error("❌ CRITICAL HOTEL ERROR:", error.message);
+        res.status(500).json({ error: "Erreur de connexion fournisseur." });
     }
 });
 
