@@ -25,7 +25,16 @@ const duffel = new Duffel({
 // --- UTILITAIRE : SIGNATURE HOTELBEDS ---
 function getHotelbedsSignature() {
     const timestamp = Math.floor(Date.now() / 1000);
-    const data = process.env.HOTELBEDS_API_KEY + process.env.HOTELBEDS_SECRET + timestamp;
+    // Utilisation stricte de HOTELBEDS_KEY comme sur ton Render
+    const apiKey = process.env.HOTELBEDS_KEY;
+    const secret = process.env.HOTELBEDS_SECRET;
+    
+    if (!apiKey || !secret) {
+        console.error("❌ Clés Hotelbeds manquantes dans les variables d'environnement !");
+        return null;
+    }
+
+    const data = apiKey + secret + timestamp;
     return crypto.createHash('sha256').update(data).digest('hex');
 }
 
@@ -69,19 +78,22 @@ app.post('/search-flights', async (req, res) => {
 
 // --- RECHERCHE D'HÔTELS ---
 app.post('/search-hotels', async (req, res) => {
-    const { destinationCode, checkIn, checkOut, adults } = req.body;
-    
-    if (!destinationCode || !checkIn || !checkOut) {
-        return res.status(400).json({ error: "Dates ou destination (Code IATA) manquantes" });
+    // On accepte destinationCode OU city pour être compatible avec ton front
+    const { destinationCode, city, checkIn, checkOut, adults } = req.body;
+    const finalCityCode = (destinationCode || city || "").trim().toUpperCase();
+
+    if (!finalCityCode || !checkIn || !checkOut) {
+        return res.status(400).json({ error: "Données manquantes : Code ville, check-in ou check-out." });
     }
 
     const signature = getHotelbedsSignature();
+    if (!signature) return res.status(500).json({ error: "Erreur de configuration serveur (Signature)" });
 
     try {
         const response = await fetch("https://api.test.hotelbeds.com/hotel-booking/1.0/hotels", {
             method: "POST",
             headers: {
-                "Api-key": process.env.HOTELBEDS_KEY,
+                "Api-key": process.env.HOTELBEDS_KEY, // On utilise bien ta clé Render
                 "X-Signature": signature,
                 "Accept": "application/json",
                 "Content-Type": "application/json"
@@ -93,25 +105,25 @@ app.post('/search-hotels', async (req, res) => {
                     adults: parseInt(adults) || 1, 
                     children: 0 
                 }],
-                destination: { code: destinationCode.trim().toUpperCase() } 
+                destination: { code: finalCityCode } 
             })
         });
 
         const data = await response.json();
         
-        // Sécurité : Vérifier si Hotelbeds renvoie une erreur structurée
-        if (data.error || data.code === "INVALID_DATA") {
-            return res.status(400).json({ error: data.error?.message || "Données invalides pour Hotelbeds" });
+        // Log pour débugger dans Render si ça échoue encore
+        if (!response.ok) {
+            console.error("❌ HOTELBEDS API ERROR:", data);
+            return res.status(response.status).json({ error: data.error?.message || "Erreur API Hotelbeds" });
         }
 
-        // On renvoie un objet propre au front
         res.json({ 
             hotels: data.hotels && data.hotels.hotels ? data.hotels.hotels : [] 
         });
 
     } catch (error) {
-        console.error("❌ ERREUR HOTELBEDS:", error.message);
-        res.status(500).json({ error: "Erreur de connexion au GDS Hôtels" });
+        console.error("❌ CRITICAL SERVER ERROR:", error.message);
+        res.status(500).json({ error: "Le serveur n'a pas pu contacter le fournisseur d'hôtels." });
     }
 });
 
