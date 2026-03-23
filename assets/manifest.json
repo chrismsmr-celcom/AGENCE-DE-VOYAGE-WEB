@@ -1,0 +1,23 @@
+{
+  "name": "Makmus Travel",
+  "short_name": "Makmus",
+  "description": "Réservez vos vols et hôtels au meilleur prix avec l'écosystème Makmus.",
+  "start_url": "/index.html",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait"
+}
