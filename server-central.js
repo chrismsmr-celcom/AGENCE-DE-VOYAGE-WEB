@@ -1,8 +1,8 @@
 /**
- * 🌍 TERRA VOYAGE - HUB CENTRAL API (V3.0)
- * ✈️ Vols : Duffel + Google Flights
- * 🏨 Hôtels : Lite API
- * 📦 Packages, Activités, Voitures, Assurances, Transferts : Supabase
+ * TERRA VOYAGE - HUB CENTRAL API (V3.0)
+ * Vols : Duffel + Google Flights
+ * Hôtels : Lite API
+ * Packages, Activités, Voitures, Assurances, Transferts : Supabase
  */
 
 require('dotenv').config();
