@@ -25,20 +25,18 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 const LITE_HEADERS = { "X-API-Key": process.env.LITE_API_KEY, "Content-Type": "application/json" };
 
 // ==========================================
-// 1. VOLS (DUFFEL UNIQUEMENT)
+// 1. VOLS (DUFFEL UNIQUEMENT) - CORRIGÉ
 // ==========================================
 app.post('/api/flights/search', async (req, res) => {
     const { origin, destination, departureDate, returnDate, passengers, tripType } = req.body;
 
     try {
-        // Construction des tranches de vol (Slices)
         const slices = [{ 
             origin: origin.toUpperCase(), 
             destination: destination.toUpperCase(), 
             departure_date: departureDate 
         }];
 
-        // Gestion de l'aller-retour
         if (tripType === 'round_trip' && returnDate) {
             slices.push({ 
                 origin: destination.toUpperCase(), 
@@ -47,22 +45,29 @@ app.post('/api/flights/search', async (req, res) => {
             });
         }
 
-        // Appel unique à Duffel
+        // CORRECTION ICI : Duffel veut un tableau d'objets [{type: "adult"}, ...]
+        // On s'assure que 'passengers' est un nombre, sinon par défaut 1
+        const numAdults = parseInt(passengers) || 1;
+        const passengerList = Array.from({ length: numAdults }, () => ({ type: "adult" }));
+
         const duffelRes = await duffel.offerRequests.create({
-            slices,
-            passengers: Array.from({ length: parseInt(passengers) || 1 }, () => ({ type: "adult" })),
+            slices: slices,
+            passengers: passengerList, // Utilisation de la liste formatée
             return_offers: true
         });
 
-        // On renvoie directement les offres Duffel dans un format propre
+        // Debug: log pour voir ce que Duffel renvoie réellement dans ta console Render
+        console.log(`Vols trouvés pour ${origin}-${destination}: ${duffelRes.data.offers.length}`);
+
         res.json({ 
             source: "duffel",
             flights: duffelRes.data.offers || [] 
         });
 
     } catch (e) { 
-        console.error("Erreur Vols Duffel:", e.message); 
-        res.status(500).json({ flights: [], error: "Service Duffel indisponible" });
+        // Analyse plus précise de l'erreur Duffel
+        console.error("Détails Erreur Duffel:", e.errors ? JSON.stringify(e.errors) : e.message); 
+        res.status(500).json({ flights: [], error: "Erreur API Duffel", details: e.message });
     }
 });
 
