@@ -57,7 +57,21 @@ app.post('/api/flights/search', async (req, res) => {
 
     res.json(results);
 });
+app.get('/api/locations/search', async (req, res) => {
+    const query = req.query.q;
+    if (!query) return res.json([]);
 
+    const { data, error } = await supabase
+        .from('air_destinations')
+        .select('*')
+        // On cherche par Nom, Ville ou Code IATA
+        .or(`name.ilike.%${query}%,municipality.ilike.%${query}%,iata_code.ilike.%${query}%`)
+        // On priorise les grands aéroports (large_airport) pour plus de pertinence
+        .order('type', { ascending: false }) 
+        .limit(10);
+
+    res.json(error ? [] : data);
+});
 // ==========================================
 // 2. HÔTELS (LITE API)
 // ==========================================
