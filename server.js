@@ -118,7 +118,57 @@ app.post('/search-hotels', async (req, res) => {
         res.status(500).json({ error: "Erreur de connexion fournisseur." });
     }
 });
+// --- CONFIGURATION LITE API ---
+const LITE_API_KEY = "sand_802ba304-83f9-414e-b9b6-e0c629aaf404";
+const LITE_HEADERS = {
+    "X-API-Key": LITE_API_KEY,
+    "Content-Type": "application/json"
+};
 
+// --- RECHERCHE D'HÔTELS (LITE API) ---
+app.post('/hotels/search', async (req, res) => {
+    try {
+        const response = await fetch("https://api.liteapi.travel/v3.0/hotels/rates?rm=true", {
+            method: "POST",
+            headers: LITE_HEADERS,
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur Lite API Search" });
+    }
+});
+
+// --- PRÉ-RÉSERVATION (Vérification du prix final) ---
+app.post('/hotels/prebook', async (req, res) => {
+    try {
+        const response = await fetch("https://book.liteapi.travel/v3.0/rates/prebook", {
+            method: "POST",
+            headers: LITE_HEADERS,
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur Lite API Prebook" });
+    }
+});
+
+// --- CONFIRMATION DE RÉSERVATION ---
+app.post('/hotels/book', async (req, res) => {
+    try {
+        const response = await fetch("https://book.liteapi.travel/v3.0/rates/book", {
+            method: "POST",
+            headers: LITE_HEADERS,
+            body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur Lite API Booking" });
+    }
+});
 // --- RÉSERVATION DE VOL ---
 app.post('/book-flight', async (req, res) => {
     const { offer_id, passengers, email } = req.body;
