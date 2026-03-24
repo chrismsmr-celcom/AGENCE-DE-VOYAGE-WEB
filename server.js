@@ -126,7 +126,7 @@ const LITE_HEADERS = {
 };
 
 // --- RECHERCHE D'HÔTELS (LITE API) ---
-app.post('/hotels/search', async (req, res) => {
+app.post('/search-hotels', async (req, res) => {
     try {
         const response = await fetch("https://api.liteapi.travel/v3.0/hotels/rates?rm=true", {
             method: "POST",
