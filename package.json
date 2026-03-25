@@ -1,32 +1,21 @@
 {
-  "name": "terra-voyage-api",
-  "version": "1.0.0",
-  "description": "Hub Central API pour Terra Voyage - Vols, Hôtels, Packages et Services",
-  "main": "server-central.js",
+  "name": "terra-voyage-hub",
+  "version": "3.2.0",
+  "description": "API Hub Central pour Terra Voyage",
+  "main": "server.js",
   "scripts": {
     "start": "node server-central.js",
-    "dev": "node --watch server-central.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch server-central.js"
   },
-  "keywords": [
-    "travel",
-    "api",
-    "duffel",
-    "liteapi",
-    "supabase"
-  ],
-  "author": "Chris Musumary",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@duffel/api": "^4.21.6",
-    "@supabase/supabase-js": "^2.49.1",
-    "axios": "^1.13.6",
-    "cors": "^2.8.6",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1"
+    "@duffel/api": "^3.0.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.2"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
