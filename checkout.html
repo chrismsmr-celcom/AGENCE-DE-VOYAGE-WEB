@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terra Voyage - Paiement sécurisé</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .checkout-card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            font-weight: 800;
+            padding: 1rem;
+            border-radius: 1rem;
+            transition: all 0.3s;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .payment-method {
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .payment-method.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-montserrat">
+
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm py-4 px-6 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-black">Terra<span class="text-blue-600">Voyage</span></a>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">Étape 2/3</span>
+                <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="w-2/3 h-full bg-blue-600 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <div class="grid lg:grid-cols-3 gap-8">
+            
+            <!-- FORMULAIRE DE PAIEMENT -->
+            <div class="lg:col-span-2">
+                <div class="checkout-card p-6 md:p-8">
+                    <h2 class="text-xl font-bold mb-6">Informations de réservation</h2>
+                    
+                    <!-- Informations personnelles -->
+                    <div class="mb-8">
+                        <h3 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                            <i class="fas fa-user text-blue-500"></i> Vos informations
+                        </h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+                                <input type="text" id="full-name" class="form-input" placeholder="Jean Dupont" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" id="email" class="form-input" placeholder="jean@example.com" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                                <input type="tel" id="phone" class="form-input" placeholder="+33 6 12 34 56 78" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pays</label>
+                                <select id="country" class="form-input">
+                                    <option value="FR">France</option>
+                                    <option value="BE">Belgique</option>
+                                    <option value="CH">Suisse</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="CD">République Démocratique du Congo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mode de paiement -->
+                    <div class="mb-8">
+                        <h3 class="font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                            <i class="fas fa-credit-card text-blue-500"></i> Mode de paiement
+                        </h3>
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <div class="payment-method active" data-method="card">
+                                <div class="text-center">
+                                    <i class="fas fa-credit-card text-2xl text-blue-600"></i>
+                                    <p class="text-xs mt-1">Carte bancaire</p>
+                                </div>
+                            </div>
+                            <div class="payment-method" data-method="paypal">
+                                <div class="text-center">
+                                    <i class="fab fa-paypal text-2xl text-blue-600"></i>
+                                    <p class="text-xs mt-1">PayPal</p>
+                                </div>
+                            </div>
+                            <div class="payment-method" data-method="wallet">
+                                <div class="text-center">
+                                    <i class="fas fa-wallet text-2xl text-blue-600"></i>
+                                    <p class="text-xs mt-1">Wallet</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Carte bancaire -->
+                        <div id="card-fields">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de carte</label>
+                                    <input type="text" id="card-number" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date d'expiration</label>
+                                    <input type="text" id="card-expiry" class="form-input" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                                    <input type="text" id="card-cvv" class="form-input" placeholder="123" maxlength="4">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PayPal (caché par défaut) -->
+                        <div id="paypal-fields" class="hidden text-center py-8">
+                            <i class="fab fa-paypal text-6xl text-blue-600 mb-4"></i>
+                            <p class="text-gray-500">Vous serez redirigé vers PayPal pour finaliser le paiement</p>
+                        </div>
+                        
+                        <!-- Wallet (caché par défaut) -->
+                        <div id="wallet-fields" class="hidden">
+                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                                <i class="fas fa-wallet text-4xl text-gray-400 mb-3"></i>
+                                <p class="text-gray-500">Paiement par portefeuille électronique</p>
+                                <p class="text-sm text-gray-400 mt-1">Solde disponible: <span class="font-bold text-green-600">1,250.00 €</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Conditions -->
+                    <div class="mb-8">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="terms" class="w-4 h-4 rounded border-gray-300 text-blue-600">
+                            <span class="text-sm text-gray-600">J'accepte les <a href="#" class="text-blue-600 hover:underline">conditions générales de vente</a> et la <a href="#" class="text-blue-600 hover:underline">politique de confidentialité</a></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Bouton de paiement -->
+                    <button id="pay-button" class="btn-primary py-4 text-lg">
+                        <i class="fas fa-lock mr-2"></i> Payer maintenant
+                    </button>
+                    
+                    <p class="text-xs text-gray-400 text-center mt-4">
+                        <i class="fas fa-shield-alt mr-1"></i> Paiement 100% sécurisé
+                    </p>
+                </div>
+            </div>
+            
+            <!-- RÉSUMÉ DE LA COMMANDE -->
+            <div>
+                <div class="checkout-card p-6 sticky top-24">
+                    <h2 class="text-xl font-bold mb-4">Récapitulatif</h2>
+                    
+                    <div id="offer-summary" class="space-y-4">
+                        <!-- Résumé dynamique -->
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="fas fa-spinner fa-spin text-2xl"></i>
+                            <p class="mt-2">Chargement...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-100 pt-4 mt-4">
+                        <div class="summary-item">
+                            <span class="text-gray-600">Sous-total</span>
+                            <span id="subtotal" class="font-semibold">0€</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="text-gray-600">Taxes et frais</span>
+                            <span id="taxes" class="font-semibold">0€</span>
+                        </div>
+                        <div class="summary-item text-lg font-bold pt-2">
+                            <span>Total</span>
+                            <span id="total" class="text-blue-600">0€</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-600">
+                        <i class="fas fa-info-circle mr-1"></i> La confirmation vous sera envoyée par email
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="./js/pages/checkout.js"></script>
+</body>
+</html>
