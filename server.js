@@ -190,7 +190,100 @@ app.post('/api/flights/search', async (req, res) => {
         });
     }
 });
+app.get('/api/airline-logo/:code', async (req, res) => {
+    const { code } = req.params;
+    const iataCode = code.toUpperCase();
+    
+    if (!supabase) {
+        return res.status(503).json({ error: "Service indisponible" });
+    }
+    
+    try {
+        // Chercher le logo dans la base
+        const { data, error } = await supabase
+            .from('airline_logos')
+            .select('logo_url, logo_svg')
+            .eq('iata_code', iataCode)
+            .eq('is_active', true)
+            .single();
+        
+        if (error || !data) {
+            // Logo par défaut si non trouvé
+            const defaultSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40">
+                <rect width="60" height="40" fill="#2563eb" rx="4"/>
+                <text x="30" y="25" font-size="10" font-family="monospace" text-anchor="middle" fill="white">${iataCode}</text>
+            </svg>`;
+            
+            res.set('Content-Type', 'image/svg+xml');
+            return res.send(defaultSvg);
+        }
+        
+        // Si c'est une URL externe, rediriger
+        if (data.logo_url && data.logo_url.startsWith('http')) {
+            return res.redirect(data.logo_url);
+        }
+        
+        // Sinon, envoyer le SVG
+        res.set('Content-Type', 'image/svg+xml');
+        res.send(data.logo_svg || data.logo_url);
+        
+    } catch (error) {
+        console.error('Erreur logo:', error);
+        // Fallback SVG
+        res.set('Content-Type', 'image/svg+xml');
+        res.send(`<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40">
+            <rect width="60" height="40" fill="#2563eb" rx="4"/>
+            <text x="30" y="25" font-size="10" text-anchor="middle" fill="white">${iataCode}</text>
+        </svg>`);
+    }
+});
 
+// Récupérer tous les logos (pour admin)
+app.get('/api/airline-logos', async (req, res) => {
+    if (!supabase) {
+        return res.json({ success: false, logos: [] });
+    }
+    
+    try {
+        const { data, error } = await supabase
+            .from('airline_logos')
+            .select('iata_code, name, logo_url, priority')
+            .eq('is_active', true)
+            .order('priority', { ascending: false })
+            .order('name');
+        
+        res.json({ success: true, logos: data || [] });
+    } catch (error) {
+        res.json({ success: false, error: error.message });
+    }
+});
+
+// Ajouter/modifier un logo (endpoint admin)
+app.post('/api/airline-logo', async (req, res) => {
+    const { iata_code, name, logo_url, priority } = req.body;
+    
+    if (!iata_code || !name) {
+        return res.status(400).json({ error: "iata_code et name requis" });
+    }
+    
+    try {
+        const { data, error } = await supabase
+            .from('airline_logos')
+            .upsert({
+                iata_code: iata_code.toUpperCase(),
+                name,
+                logo_url,
+                priority: priority || 0,
+                updated_at: new Date().toISOString()
+            })
+            .select();
+        
+        if (error) throw error;
+        res.json({ success: true, logo: data[0] });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 // ==========================================
 // 2. HÔTELS (DUFFEL STAYS - NOUVEAU !)
 // ==========================================
