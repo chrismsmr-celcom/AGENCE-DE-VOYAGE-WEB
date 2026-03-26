@@ -3,664 +3,548 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Résultats - Terra Voyage</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>Terra Voyage - Résultats de recherche</title>
+    
+   <!-- Tailwind CSS (version stable avec configuration personnalisée) -->
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#ef4444',
+                    },
+                    fontFamily: {
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Font Awesome 6 (version optimisée) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <!-- Google Fonts (Montserrat) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Styles personnalisés -->
+    <link rel="stylesheet" href="./css/style.css">
+    
+    <!-- Flatpickr (calendrier) avec fallback -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script>
+    <script>
+        // Vérifier que flatpickr est chargé
+        if (typeof flatpickr === 'undefined') {
+            console.warn('Flatpickr non chargé, tentative de chargement alternatif...');
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"><\/script>');
+            document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">');
+        }
+    </script>
+    
+    <!-- Swiper (carrousel) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <!-- Favicons avec fallback -->
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" onerror="this.href='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ctext y=\'.9em\' font-size=\'90\'%3E✈️%3C/text%3E%3C/svg%3E'">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/icon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+    <link rel="manifest" href="./assets/manifest.json">
+    
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Terra Voyage - Agence de voyage de luxe. Découvrez nos offres exclusives de vols, séjours et location de voitures dans le monde entier.">
+    <meta name="keywords" content="voyage, luxe, vol, hôtel, location voiture, Terra Voyage">
+    <meta name="author" content="Terra Voyage">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://terravoyage.com/">
+    <meta property="og:title" content="Terra Voyage | Luxe & Sérénité">
+    <meta property="og:description" content="Accédez à l'excellence technologique du réseau Terra Voyage pour des itinéraires sur-mesure.">
+    <meta property="og:image" content="https://terravoyage.com/assets/og-image.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://terravoyage.com/">
+    <meta property="twitter:title" content="Terra Voyage | Luxe & Sérénité">
+    <meta property="twitter:description" content="Accédez à l'excellence technologique du réseau Terra Voyage pour des itinéraires sur-mesure.">
+    <meta property="twitter:image" content="https://terravoyage.com/assets/og-image.jpg">
+    
+    <!-- Preconnect pour améliorer les performances -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Styles critiques pour éviter le FOUC -->
     <style>
-        :root {
-            --travala-blue: #2d83c2;
-            --luxury-black: #1a1a1a;
-            --premium-red: #ff4d4d;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #fcfcfc;
-            color: var(--luxury-black);
-        }
-
-        /* --- HEADER DNA --- */
-        #mainHeader {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        #mainHeader.scrolled {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-            height: 70px !important;
-        }
-         #mainHeader.scrolled {
-    @apply shadow-xl py-2 h-16; /* Le header rétrécit et gagne une ombre au scroll */
-    background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-        }
+        /* Styles critiques pour le chargement initial */
+        body { opacity: 0; transition: opacity 0.3s ease; }
+        body.loaded { opacity: 1; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s ease-in-out; background-size: cover; background-position: center; }
+        .hero-slide.active { opacity: 1; }
         .nav-transparent { background: transparent; }
+    </style>
+    
+    <script>
+        // Marquer le body comme chargé
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('loaded');
+        });
         
-        #logo {
-            height: 60px;
-            transition: all 0.5s;
-        }
-        .scrolled #logo {
-            height: 45px;
-            filter: brightness(1) invert(0);
-        }
-        .invert-logo { filter: brightness(0) invert(1); }
-
-        /* --- SKELETON & ANIMATIONS --- */
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
+        // Gestionnaire d'erreur pour les ressources
+        window.addEventListener('error', (e) => {
+            if (e.target.tagName === 'IMG') {
+                console.warn('Image non chargée:', e.target.src);
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af"%3E✈️%3C/text%3E%3C/svg%3E';
+            }
+        }, true);
+    </script>
+    
+    <style>
+        /* Styles personnalisés */
         .result-card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e5e7eb;
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            border: 1px solid rgba(0,0,0,0.05);
+            overflow: hidden;
         }
+        
         .result-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-            border-color: var(--travala-blue);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-color: #2563eb;
         }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-       /* Container principal */
-.m-sider-filter {
-    width: 300px;
-    background: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    font-family: 'Inter', sans-serif;
-}
-
-/* Titres de sections */
-.c-filter-common__subtit {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 12px;
-}
-
-/* Items de liste */
-.filter-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    cursor: pointer;
-}
-
-.filter-label {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    align-items: center;
-}
-
-/* Logos & Icônes */
-.baggage-icon, .alliance-icon {
-    width: 18px;
-    height: 18px;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-/* Prix (Description) */
-.filter-desc {
-    color: #888;
-    font-size: 12px;
-}
-
-/* Histogramme (Times) */
-.filter-timeTable-strip {
-    display: flex;
-    align-items: flex-end;
-    height: 60px;
-    padding: 0;
-    list-style: none;
-    gap: 2px;
-    margin: 15px 0;
-}
-
-.filter-timeTable-bar {
-    flex: 1;
-    border-radius: 2px 2px 0 0;
-    position: relative;
-    transition: background-color 0.3s;
-}
-
-.filter-timeTable-bar:hover {
-    background-color: #3366ff !important;
-}
-/* Cache le contenu "Show More" par défaut */
-.hidden { display: none !important; }
-
-/* Style du séparateur */
-.separator {
-    border: 0;
-    border-top: 1px solid #f0f0f0;
-    margin: 20px 0;
-}
-
-/* Alignement des alliances */
-.item-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.item-left img {
-    width: 16px;
-    height: 16px;
-}
-
-/* Histogramme simplifié */
-.histogram-container {
-    display: flex;
-    align-items: flex-end;
-    height: 40px;
-    gap: 2px;
-    margin: 10px 0;
-}
-
-.bar {
-    flex: 1;
-    background: #edf1ff;
-    border-radius: 2px 2px 0 0;
-}
-/* Bloc Map */
-.map-filter-box {
-    height: 100px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.btn-map {
-    background: #fff;
-    color: #0066ff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-/* Titres */
-.filter-label-title {
-    font-weight: 700;
-    font-size: 14px;
-    margin: 15px 0;
-    color: #333;
-}
-
-/* Grille d'étoiles (Star Rating) */
-.star-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-}
-
-.star-item {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-}
-
-.star-item:hover { border-color: #0066ff; color: #0066ff; }
-
-/* Grille de prix rapides */
-.quick-price-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    margin-top: 15px;
-}
-
-.price-btn {
-    background: #f5f7fa;
-    border: none;
-    padding: 6px;
-    font-size: 11px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.price-btn:hover { background: #e8ecf2; }
-    </style>
-<body class="bg-gray-50">
-
-    <header id="mainHeader" class="fixed top-0 left-0 w-full z-50 h-20 flex items-center bg-white border-b border-gray-100 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-8 w-full flex items-center justify-between">
-            <a href="/">
-                <img src="https://i.postimg.cc/j5VzVV3c/YABISO-VOYAGE-20251216-035622-0000-removebg-preview.png" 
-                     alt="Terra Voyage" id="logo" class="h-10 object-contain">
-            </a>
+        
+        .btn-premium {
+            background: #2563eb;
+            color: white;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            border-radius: 12px;
+        }
+        
+        .btn-premium:hover {
+            background: #1e40af;
+            transform: scale(1.02);
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .glass-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        /* Sidebar filtres */
+        .filter-sidebar {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            position: sticky;
+            top: 100px;
+        }
+        
+        .filter-header {
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            padding: 1rem 1.25rem;
+        }
+        
+        .filter-section {
+            padding: 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .filter-section:last-child {
+            border-bottom: none;
+        }
+        
+        .filter-title {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #9ca3af;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .price-range-slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .price-range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .airline-checkbox {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            accent-color: #2563eb;
+        }
+        
+        .reset-filters-btn {
+            width: 100%;
+            padding: 0.625rem;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b7280;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        
+        .reset-filters-btn:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        
+        /* Badge recommandation */
+        .recommendation-badge {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left: 4px solid #f59e0b;
+        }
+        
+        /* Scrollbar personnalisée */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2563eb;
+            border-radius: 4px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filter-sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top: auto;
+                z-index: 100;
+                border-radius: 1.5rem 1.5rem 0 0;
+                max-height: 70vh;
+                overflow-y: auto;
+                transform: translateY(100%);
+                transition: transform 0.3s ease;
+            }
             
-            <div class="hidden md:flex items-center gap-4">
-                <div class="px-4 py-2 bg-gray-50 rounded-full border border-gray-100 flex items-center gap-3">
-                    <span id="header-dest" class="text-[10px] font-black uppercase tracking-widest text-gray-400">Chargement...</span>
-                    <div class="w-[1px] h-3 bg-gray-200"></div>
-                    <span id="header-dates" class="text-[10px] font-black uppercase tracking-widest text-blue-600">-- / --</span>
+            .filter-sidebar.open {
+                transform: translateY(0);
+            }
+            
+            .filter-toggle {
+                display: flex;
+            }
+        }
+        
+        .filter-toggle {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 99;
+            background: #2563eb;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-toggle {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased bg-gray-50 font-montserrat">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 glass-header py-4 px-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="/" class="p-2 hover:bg-gray-100 rounded-full transition">
+                    <i class="fas fa-arrow-left text-gray-400 hover:text-blue-600"></i>
+                </a>
+                <div>
+                    <h2 id="summary-title" class="text-sm font-bold uppercase tracking-wider text-blue-900">Recherche</h2>
+                    <p id="summary-details" class="text-xs text-gray-500">Chargement...</p>
                 </div>
-                <button onclick="window.history.back()" class="text-[10px] font-bold uppercase tracking-widest px-5 py-2 hover:bg-gray-100 rounded-full transition-all">Modifier</button>
+            </div>
+            <div id="loader-status">
+                <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-6 pt-32 pb-20 flex flex-col md:flex-row gap-10">
-        
-        <aside class="w-full md:w-1/4">
-            <div id="dynamic-filters" class="space-y-8 sticky top-28">
-                <div class="animate-pulse space-y-4">
-                    <div class="h-4 bg-gray-200 rounded w-1/3"></div>
-                    <div class="h-32 bg-gray-100 rounded-2xl"></div>
-                    <div class="h-4 bg-gray-200 rounded w-1/4"></div>
-                    <div class="h-32 bg-gray-100 rounded-2xl"></div>
-                </div>
-            </div>
-        </aside>
-
-        <main class="flex-1">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h2 id="result-status" class="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-1">Analyse des disponibilités...</h2>
-                    <div class="h-1 w-12 bg-blue-600 rounded-full"></div>
-                </div>
-                
-                <select id="sort-filter" class="bg-white border border-gray-100 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest focus:ring-0 outline-none cursor-pointer shadow-sm">
-                    <option value="price">Prix : Moins cher</option>
-                    <option value="recommended">Recommandé</option>
-                    <option value="fastest">Plus rapide</option>
-                </select>
-            </div>
-
-            <div id="results-container" class="space-y-6">
-                <div class="bg-white p-8 rounded-[2.5rem] border border-gray-50 h-48 animate-pulse"></div>
-                <div class="bg-white p-8 rounded-[2.5rem] border border-gray-50 h-48 animate-pulse"></div>
-                <div class="bg-white p-8 rounded-[2.5rem] border border-gray-50 h-48 animate-pulse"></div>
-            </div>
-        </main>
+    <!-- FILTER TOGGLE (MOBILE) -->
+    <div class="filter-toggle" id="filter-toggle">
+        <i class="fas fa-sliders-h text-lg"></i>
     </div>
 
-<script>
-    const params = new URLSearchParams(window.location.search);
-    const currentMode = params.get('mode') || 'stays';
-    const API_BASE_URL = "https://agence-de-voyage-web.onrender.com"; 
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // Init UI
-        document.getElementById('header-dest').innerText = params.get('dest') || 'Voyage';
-        document.getElementById('header-dates').innerText = params.get('departureDate') || '--';
-        
-        fetchResults();
-
-        // Header Scroll Effect
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('mainHeader');
-            if (window.scrollY > 50) header.classList.add('scrolled');
-            else header.classList.remove('scrolled');
-        });
-    });
-
-    async function fetchResults() {
-    const container = document.getElementById('results-container');
-    const filtersContainer = document.getElementById('dynamic-filters');
-
-    try {
-        const endpoint = currentMode === 'flights' ? '/search-flights' : '/search-hotels';
-        
-        // On vérifie que les paramètres existent pour éviter les URLs invalides
-        const dest = params.get('dest');
-        const depDate = params.get('departureDate');
-        
-        if (!dest || !depDate) {
-            container.innerHTML = `<p class="text-center py-20">Paramètres de recherche incomplets.</p>`;
-            return;
-        }
-
-        const bodyContent = currentMode === 'flights' ? {
-            origin: "PAR", 
-            destination: dest,
-            departureDate: depDate,
-            passengers: parseInt(params.get('adults') || 1),
-            cabinClass: (params.get('class') || 'economy').toLowerCase(),
-            tripType: params.get('tripType') || 'one_way'
-        } : {
-            destinationCode: dest,
-            checkIn: depDate,
-            checkOut: params.get('returnDate') || depDate, // Sécurité si retour vide
-            adults: parseInt(params.get('adults') || 1)
-        };
-
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyContent)
-        });
-
-        if (!response.ok) throw new Error('Serveur GDS injoignable');
-
-        const data = await response.json();
-        container.innerHTML = ""; 
-
-        if (currentMode === 'flights') {
-            // Utilise tes données réelles pour les filtres si possible
-            renderFlightFilters(filtersContainer); 
-            displayFlights(data.offers, container);
-        } else {
-            // On passe un objet de config à tes nouveaux filtres d'hôtels
-            const hotelConfig = {
-                city: dest,
-                maxPrice: 1000,
-                popular: [{id: 'wifi', label: 'WiFi Gratuit'}, {id: 'p', label: 'Parking'}],
-                popularTotal: 5,
-                priceBuckets: ["0-100€", "100-300€", "+500€"]
-            };
-            renderHotelFilters(hotelConfig); 
-            displayHotels(data.hotels, container);
-        }
-
-        const count = currentMode === 'flights' ? (data.offers?.length || 0) : (data.hotels?.length || 0);
-        document.getElementById('result-status').innerText = `${count} ${currentMode === 'flights' ? 'Vols' : 'Hôtels'} Disponibles`;
-
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        container.innerHTML = `<div class="text-center py-20"><p class="font-black uppercase text-red-500">Erreur de connexion GDS</p></div>`;
-    }
-}
-    function displayFlights(offers, container) {
-        if (!offers || offers.length === 0) {
-            container.innerHTML = "<p class='text-center py-10 font-bold text-gray-400 uppercase tracking-widest'>Aucun vol trouvé</p>";
-            return;
-        }
-
-        offers.forEach(offer => {
-            const segment = offer.slices[0].segments[0];
-            container.innerHTML += `
-            <div class="result-card bg-white p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center gap-8 group">
-                <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center font-black text-xs text-blue-600 border border-gray-100 uppercase italic">
-                    ${offer.owner.iata_code}
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto p-6">
+        <div class="flex flex-col lg:flex-row gap-6">
+            
+            <!-- SIDEBAR FILTRES -->
+            <aside class="lg:w-80 flex-shrink-0" id="filter-sidebar">
+                <div class="filter-sidebar">
+                    <div class="filter-header">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-sliders-h text-white text-sm"></i>
+                            <h3 class="text-white font-bold text-xs uppercase tracking-wider">Affiner la recherche</h3>
+                        </div>
+                        <p class="text-blue-200 text-[9px] mt-1">Filtrez selon vos préférences</p>
+                    </div>
+                    
+                    <!-- Budget -->
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <i class="fas fa-tag text-blue-500 text-xs"></i>
+                            <span>Budget maximum</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-mono text-gray-500" id="price-min-display">0$</span>
+                            <span class="text-xl font-bold text-blue-600" id="price-display">1500$</span>
+                        </div>
+                        <input type="range" id="price-range" min="0" max="5000" step="50" value="1500" 
+                               class="price-range-slider w-full">
+                        <div class="flex justify-between text-[9px] text-gray-400 mt-2">
+                            <span>Économique</span>
+                            <span>Premium</span>
+                            <span>Luxe</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Escales -->
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <i class="fas fa-plane text-blue-500 text-xs"></i>
+                            <span>Escales</span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="filter-direct" class="airline-checkbox">
+                                <span class="text-sm text-gray-600 group-hover:text-blue-600 transition">Vols directs uniquement</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="filter-one-stop" class="airline-checkbox">
+                                <span class="text-sm text-gray-600 group-hover:text-blue-600 transition">Maximum 1 escale</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Compagnies -->
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <i class="fas fa-building text-blue-500 text-xs"></i>
+                            <span>Compagnies</span>
+                        </div>
+                        <div id="airline-filters" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                            <!-- Dynamiquement rempli par JavaScript -->
+                            <div class="text-center text-gray-400 text-xs py-4">Chargement...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Heures de départ -->
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <i class="fas fa-clock text-blue-500 text-xs"></i>
+                            <span>Heure de départ</span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="filter-morning" class="airline-checkbox">
+                                <span class="text-sm text-gray-600 group-hover:text-blue-600 transition">Matin (06:00 - 12:00)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="filter-afternoon" class="airline-checkbox">
+                                <span class="text-sm text-gray-600 group-hover:text-blue-600 transition">Après-midi (12:00 - 18:00)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="filter-evening" class="airline-checkbox">
+                                <span class="text-sm text-gray-600 group-hover:text-blue-600 transition">Soirée (18:00 - 23:59)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Bouton réinitialiser -->
+                    <button id="reset-filters" class="reset-filters-btn">
+                        <i class="fas fa-undo-alt mr-2"></i> Réinitialiser tous les filtres
+                    </button>
+                </div>
+            </aside>
+            
+            <!-- SECTION RÉSULTATS -->
+            <div class="flex-1 space-y-5">
+                
+                <!-- BANDEAU RECOMMANDATION -->
+                <div id="recommendation-banner" class="recommendation-badge rounded-xl p-4 hidden animate-slide-up">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-amber-500 p-2 rounded-xl">
+                            <i class="fas fa-crown text-white text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-amber-800 text-sm uppercase tracking-wide">✨ Offre du moment</h4>
+                            <p id="recommendation-text" class="text-amber-700 text-sm mt-0.5">Le meilleur rapport qualité-prix sélectionné pour vous</p>
+                        </div>
+                        <button id="close-recommendation" class="text-amber-400 hover:text-amber-600 transition">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="flex-1 grid grid-cols-3 gap-4 items-center w-full">
-                    <div class="text-center md:text-left">
-                        <p class="text-2xl font-black italic tracking-tighter">${new Date(segment.departing_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">${segment.origin.iata_code}</p>
+                <!-- COMPTEUR RÉSULTATS -->
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-chart-line text-blue-500 text-sm"></i>
+                        <span id="results-count" class="text-xs font-bold text-gray-500 uppercase tracking-wider">0 RÉSULTATS</span>
                     </div>
-
-                    <div class="relative flex flex-col items-center">
-                        <span class="text-[8px] font-black uppercase text-blue-600 mb-2">${offer.slices[0].segments.length > 1 ? 'Escale' : 'Direct'}</span>
-                        <div class="w-full h-[1px] bg-gray-100 relative">
-                            <i class="fas fa-plane absolute -top-[5px] left-1/2 -translate-x-1/2 text-[10px] text-gray-200 group-hover:text-blue-600 transition-all"></i>
-                        </div>
-                        <span class="text-[9px] font-bold text-gray-300 mt-2">${offer.slices[0].duration.replace('PT', '').toLowerCase()}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] text-gray-400">Trier par :</span>
+                        <select id="sort-select" class="text-xs border-none bg-transparent font-semibold text-gray-600 focus:ring-0">
+                            <option value="price_asc">Prix croissant</option>
+                            <option value="price_desc">Prix décroissant</option>
+                            <option value="duration_asc">Durée croissante</option>
+                            <option value="duration_desc">Durée décroissante</option>
+                        </select>
                     </div>
-
-                    <div class="text-center md:text-right">
-                        <p class="text-2xl font-black italic tracking-tighter">${new Date(segment.arriving_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">${segment.destination.iata_code}</p>
-                    </div>
-                </div>
-
-                <div class="md:border-l border-gray-50 md:pl-10 text-center md:text-right w-full md:w-48">
-                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Tarif Privilège</p>
-                    <p class="text-3xl font-black italic tracking-tighter text-black">${offer.total_amount}<span class="text-sm ml-1">${offer.total_currency}</span></p>
-                    <button class="w-full mt-4 bg-black text-white py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-lg shadow-gray-200">Détails</button>
-                </div>
-            </div>`;
-        });
-    }
-
-    function displayHotels(hotels, container) {
-        if (!hotels || hotels.length === 0) {
-            container.innerHTML = "<p class='text-center py-10 font-bold text-gray-400 uppercase tracking-widest'>Aucun établissement trouvé</p>";
-            return;
-        }
-
-        hotels.forEach(hotel => {
-            container.innerHTML += `
-            <div class="result-card bg-white rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row h-auto md:h-64 group">
-                <div class="w-full md:w-72 bg-gray-100 relative overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=500" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">Premium</div>
                 </div>
                 
-                <div class="p-8 flex-1 flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-start">
-                            <h3 class="text-2xl font-black italic leading-none uppercase tracking-tighter">${hotel.name}</h3>
-                            <div class="flex text-yellow-400 text-[8px] gap-1">
-                                ${'<i class="fas fa-star"></i>'.repeat(parseInt(hotel.categoryCode) || 4)}
-                            </div>
-                        </div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-3"><i class="fas fa-map-marker-alt text-blue-600 mr-2"></i> ${hotel.zoneName || 'Zone Exclusive'}</p>
-                    </div>
-
-                    <div class="flex justify-between items-end mt-6">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[9px] font-black uppercase text-green-500 bg-green-50 px-3 py-1 rounded-lg self-start">Confirmation Immédiate</span>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Par nuit</p>
-                            <p class="text-3xl font-black italic tracking-tighter">${hotel.minRate}€</p>
-                            <button class="mt-3 bg-black text-white px-8 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all">Réserver</button>
-                        </div>
-                    </div>
+                <!-- LISTE DES RÉSULTATS -->
+                <div id="results-list" class="space-y-4">
+                    <!-- Les résultats sont injectés dynamiquement -->
                 </div>
-            </div>`;
-        });
-    }
-
-    function renderFlightFilters(f) {
-        f.innerHTML = `
-            <div class="space-y-6">
-                <div>
-                    <label class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Escales</label>
-                    <div class="space-y-3">
-                        <label class="flex items-center gap-3 text-[11px] font-bold uppercase cursor-pointer">
-                            <input type="checkbox" class="rounded border-gray-200 text-black focus:ring-0 w-4 h-4" checked> Direct
-                        </label>
-                        <label class="flex items-center gap-3 text-[11px] font-bold uppercase cursor-pointer">
-                            <input type="checkbox" class="rounded border-gray-200 text-black focus:ring-0 w-4 h-4"> 1 Escale
-                        </label>
-                    </div>
+                
+                <!-- ÉTAT VIDE -->
+                <div id="empty-state" class="bg-white rounded-2xl p-16 text-center border border-dashed border-gray-200 hidden">
+                    <i class="fas fa-plane-slash text-5xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-700">Aucun résultat trouvé</h3>
+                    <p class="text-gray-400 mt-2">Essayez de modifier vos filtres ou votre recherche</p>
+                    <a href="/" class="inline-block mt-6 text-blue-600 font-bold text-sm hover:underline">
+                        ← Modifier la recherche
+                    </a>
                 </div>
-            </div>`;
-    }
+            </div>
+        </div>
+    </main>
 
-    function renderHotelFilters(f) {
-        f.innerHTML = `
-            <div>
-                <label class="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-4">Standing</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button class="bg-black text-white py-2 rounded-xl text-[10px] font-bold uppercase">5 Étoiles</button>
-                    <button class="bg-gray-50 text-gray-400 py-2 rounded-xl text-[10px] font-bold uppercase border border-gray-100">4 Étoiles</button>
-                </div>
-            </div>`;
-    }
-function renderFilters(data) {
-    const container = document.getElementById('dynamic-filters');
+    <!-- FOOTER -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center text-xs text-gray-400">
+            <div class="flex items-center gap-4">
+                <span id="footer-results-count">0 RÉSULTATS</span>
+                <span class="w-px h-3 bg-gray-200"></span>
+                <span><i class="fas fa-shield-alt mr-1 text-green-500"></i> Paiement sécurisé</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span>Connecté</span>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/js/pages/results.js"></script>
     
-    // On vide le squelette de chargement (animate-pulse)
-    container.innerHTML = '';
-
-    // Construction du template
-    const filterHTML = `
-        <div class="m-sider-filter">
-            <div class="filter-section">
-                <h2 class="filter-title">Recommended</h2>
-                <div class="filter-group">
-                    <label class="filter-item">
-                        <input type="checkbox" data-code="DIRECT">
-                        <span class="filter-label"><i class="icon-flight"></i> Nonstop</span>
-                    </label>
-                    <label class="filter-item">
-                        <input type="checkbox" data-code="Baggage">
-                        <span class="filter-label"><i class="icon-baggage"></i> Checked baggage included</span>
-                    </label>
-                    <div class="filter-more-content hidden" id="more-recommended">
-                        <label class="filter-item">
-                            <input type="checkbox" data-code="LCC">
-                            <span class="filter-label">Hide budget airlines</span>
-                        </label>
-                    </div>
-                    <button class="btn-show-more" onclick="toggleMore(this)">Show More <i class="icon-down"></i></button>
-                </div>
-            </div>
-
-            <hr class="separator">
-
-            <div class="filter-section">
-                <h2 class="filter-title">Alliance</h2>
-                <div class="filter-group">
-                    ${data.alliances.map(alliance => `
-                        <label class="filter-item">
-                            <div class="item-left">
-                                <input type="checkbox" value="${alliance.code}">
-                                <img src="${alliance.logo}" alt="${alliance.name}">
-                                <span>${alliance.name}</span>
-                            </div>
-                            <span class="price">US$${alliance.minPrice}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            </div>
-
-            <hr class="separator">
-
-            <div class="filter-section">
-                <h2 class="filter-title">Departure Time</h2>
-                <div class="time-range-display" id="time-display">00:00 – 24:00</div>
-                <div class="histogram-container">
-                    ${data.histogram.map(h => `<div class="bar" style="height: ${h}%"></div>`).join('')}
-                </div>
-                <div class="range-slider-wrapper">
-                    <input type="range" min="0" max="1440" value="0" class="slider" id="startTime">
-                    <input type="range" min="0" max="1440" value="1440" class="slider" id="endTime">
-                </div>
-            </div>
-        </div>
-    `;
-
-    container.innerHTML = filterHTML;
-}
-
-// Fonction de bascule (Show More)
-function toggleMore(button) {
-    const parent = button.parentElement;
-    const moreContent = parent.querySelector('.filter-more-content');
-    const isHidden = moreContent.classList.toggle('hidden');
-    button.innerHTML = isHidden ? 'Show More <i class="icon-down"></i>' : 'Show Less <i class="icon-up"></i>';
-}
-
-// Simulation d'un appel API (ex: Supabase ou Render)
-setTimeout(() => {
-    const mockData = {
-        alliances: [
-            { code: 'ST', name: 'SkyTeam', minPrice: 240, logo: 'https://static.tripcdn.com/packages/flight/airline-logo/latest/alliance/st.webp' },
-            { code: 'SA', name: 'Star Alliance', minPrice: 359, logo: 'https://static.tripcdn.com/packages/flight/airline-logo/latest/alliance/sa.webp' }
-        ],
-        histogram: [40, 10, 60, 90, 30, 50, 20, 70, 45, 80] // Pourcentages de hauteur
-    };
-    renderFilters(mockData);
-}, 2000); // 2 secondes de délai pour voir l'effet de chargement
-function renderHotelFilters(data) {
-    const container = document.getElementById('dynamic-filters');
-    container.innerHTML = ''; // Nettoyage du squelette de chargement
-
-    const hotelFilterHTML = `
-        <div class="filter-wrap">
-            <div class="map-filter-box" style="background-image: url('//aw-s.tripcdn.com/modules/ibu/ibu-hotel-online/es/image/bg_mapV8.87d8e59989a401c2ce2bc772fea4a32a.png')">
-                <button class="btn-map" onclick="openMap()">Show on Map</button>
-            </div>
-
-            <div class="common-filter-container">
-                <p class="filter-label-title">Popular Filters for ${data.city}</p>
-                <ul class="filter-list">
-                    ${data.popular.map(item => `
-                        <li class="checkbox-item">
-                            <input type="checkbox" id="${item.id}">
-                            <label for="${item.id}">${item.label}</label>
-                        </li>
-                    `).join('')}
-                </ul>
-                <div class="show-all-link">show all ${data.popularTotal}</div>
-            </div>
-
-            <hr class="separator">
-
-            <div class="price-container">
-                <div class="price-header">
-                    <span class="price-main-title">Budget</span>
-                    <span class="price-range-text">(US$0 - US$${data.maxPrice}+)</span>
-                </div>
-                <div class="price-slider-ui">
-                    <div class="slider-track"></div>
-                    <input type="range" min="0" max="${data.maxPrice}" value="0" class="range-input">
-                </div>
-                <div class="quick-price-grid">
-                    ${data.priceBuckets.map(bucket => `
-                        <button class="price-btn">${bucket}</button>
-                    `).join('')}
-                </div>
-            </div>
-
-            <hr class="separator">
-
-            <div class="star-rating-container">
-                <p class="filter-label-title">Star rating</p>
-                <div class="star-grid">
-                    ${[2, 3, 4, 5].map(star => `
-                        <div class="star-item">
-                            <span>${star === 2 ? '≤2' : star}</span>
-                            <i class="icon-star">★</i>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <div class="common-filter-container">
-                <p class="filter-label-title">Guest Rating</p>
-                <ul class="filter-list">
-                    <li class="checkbox-item"><input type="checkbox"> <span>Pleasant 6+</span></li>
-                    <li class="checkbox-item"><input type="checkbox"> <span>Very Good 8+</span></li>
-                </ul>
-            </div>
-        </div>
-    `;
-
-    container.innerHTML = hotelFilterHTML;
-}
-
-// Données de test
-const hotelData = {
-    city: "Dubai",
-    maxPrice: 670,
-    popularTotal: 10,
-    popular: [
-        { id: 'brk', label: 'Breakfast included' },
-        { id: 'pool', label: 'Pool' },
-        { id: 'free_can', label: 'Free cancellation' }
-    ],
-    priceBuckets: ["US$0-50", "US$50-90", "US$150-280", "> US$670"]
-};
-
-// Simulation du chargement
-setTimeout(() => renderHotelFilters(hotelData), 1000);
-</script>
+    <script>
+        // Toggle filter sidebar on mobile
+        const filterToggle = document.getElementById('filter-toggle');
+        const filterSidebar = document.getElementById('filter-sidebar');
+        
+        if (filterToggle && filterSidebar) {
+            filterToggle.addEventListener('click', function() {
+                filterSidebar.classList.toggle('open');
+            });
+            
+            // Close filter when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768 && 
+                    filterSidebar.classList.contains('open') && 
+                    !filterSidebar.contains(event.target) && 
+                    !filterToggle.contains(event.target)) {
+                    filterSidebar.classList.remove('open');
+                }
+            });
+        }
+        
+        // Close recommendation banner
+        const closeRecommendation = document.getElementById('close-recommendation');
+        const recommendationBanner = document.getElementById('recommendation-banner');
+        
+        if (closeRecommendation && recommendationBanner) {
+            closeRecommendation.addEventListener('click', function() {
+                recommendationBanner.classList.add('hidden');
+            });
+        }
+    </script>
 </body>
 </html>
