@@ -1,6 +1,7 @@
 /**
  * TERRA VOYAGE - ENGINE PRINCIPAL
  * Point d'entrée unique de l'application - Version Premium
+ * Gestion des vols, hôtels et voitures
  */
 
 import { state } from './state-manager.js';
@@ -218,6 +219,11 @@ class TerraEngine {
             self.updateDateDisplay('return', date);
         });
         
+        // Écouter les changements de chambres
+        state.subscribe('rooms', function(rooms) {
+            self.updateRoomsSummary(rooms);
+        });
+        
         // Gestion du clic extérieur pour fermer les modals
         document.addEventListener('click', function(e) {
             self.handleOutsideClick(e);
@@ -236,14 +242,93 @@ class TerraEngine {
      */
     onModeChange(mode) {
         console.log('📱 Mode changé:', mode);
+        
+        // Afficher/masquer l'option origine (seulement pour les vols)
         var isFlight = mode === 'flights';
         var flightOptions = document.getElementById('flight-options');
+        var boxOrigin = document.getElementById('box-origin');
+        var labelMain = document.getElementById('label-main');
+        
         if (flightOptions) {
-            if (isFlight) {
-                flightOptions.classList.remove('hidden');
-            } else {
-                flightOptions.classList.add('hidden');
-            }
+            flightOptions.classList.toggle('hidden', !isFlight);
+        }
+        
+        if (boxOrigin) {
+            boxOrigin.classList.toggle('hidden', !isFlight);
+        }
+        
+        // Changer le label de destination selon le mode
+        if (labelMain) {
+            var labels = {
+                flights: 'Destination (IATA)',
+                stays: 'Destination / Ville',
+                cars: 'Lieu de retrait'
+            };
+            labelMain.innerText = labels[mode] || 'Rechercher';
+        }
+        
+        // Afficher/masquer les sections du modal passagers
+        this.updatePassengerModalForMode(mode);
+        
+        // Mettre à jour le résumé
+        this.updatePassengerSummary();
+    }
+    
+    /**
+     * Met à jour l'affichage du modal passagers selon le mode
+     */
+    updatePassengerModalForMode(mode) {
+        var flightSection = document.getElementById('flight-section');
+        var hotelSection = document.getElementById('hotel-section');
+        var modalTitle = document.getElementById('modal-title');
+        
+        if (mode === 'flights') {
+            if (flightSection) flightSection.classList.remove('hidden');
+            if (hotelSection) hotelSection.classList.add('hidden');
+            if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-users"></i> Configuration du vol';
+        } else if (mode === 'stays') {
+            if (flightSection) flightSection.classList.add('hidden');
+            if (hotelSection) hotelSection.classList.remove('hidden');
+            if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-hotel"></i> Configuration du séjour';
+        } else {
+            if (flightSection) flightSection.classList.add('hidden');
+            if (hotelSection) hotelSection.classList.add('hidden');
+            if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-car"></i> Configuration location';
+        }
+    }
+    
+    /**
+     * Gestion des chambres pour les hôtels
+     */
+    updateRooms(delta, event) {
+        if (event) event.stopPropagation();
+        
+        var rooms = state.get('rooms') || 1;
+        var newValue = rooms + delta;
+        
+        if (newValue < 1) return;
+        if (newValue > 5) {
+            this.showNotification('Maximum 5 chambres', 'warning');
+            return;
+        }
+        
+        state.set('rooms', newValue);
+        
+        // Mettre à jour l'affichage
+        var roomsSpan = document.getElementById('qty-rooms');
+        if (roomsSpan) roomsSpan.innerText = newValue;
+        
+        this.updatePassengerSummary();
+    }
+    
+    /**
+     * Met à jour le résumé des chambres
+     */
+    updateRoomsSummary(rooms) {
+        var roomsSummary = document.getElementById('rooms-summary');
+        if (roomsSummary && state.get('currentMode') === 'stays') {
+            roomsSummary.innerText = rooms + ' Chambre' + (rooms > 1 ? 's' : '');
+            roomsSummary.classList.remove('hidden');
         }
     }
     
@@ -390,6 +475,12 @@ class TerraEngine {
             mainInput.value = '';
         }
         
+        // Mettre à jour le modal passagers
+        this.updatePassengerModalForMode(mode);
+        
+        // Mettre à jour le résumé
+        this.updatePassengerSummary();
+        
         // Déclencher un événement personnalisé
         var event = new CustomEvent('modeChanged', { detail: { mode: mode } });
         document.dispatchEvent(event);
@@ -461,26 +552,38 @@ class TerraEngine {
     updatePassengerSummary() {
         var passengers = state.get('passengers');
         var travelClass = state.get('travelClass');
+        var rooms = state.get('rooms') || 1;
+        var currentMode = state.get('currentMode');
         var total = passengers.adult + passengers.child + passengers.infant;
         
         var summary = document.getElementById('passenger-summary');
-        if (summary) {
-            summary.innerText = total + ' Voyageur' + (total > 1 ? 's' : '');
-        }
-        
         var classSummary = document.getElementById('class-summary');
-        if (classSummary) {
-            classSummary.innerText = 'Classe ' + travelClass;
+        var roomsSummary = document.getElementById('rooms-summary');
+        
+        if (summary) {
+            if (currentMode === 'stays') {
+                summary.innerText = total + ' Voyageur' + (total > 1 ? 's' : '');
+            } else {
+                summary.innerText = total + ' Voyageur' + (total > 1 ? 's' : '') + ' - ' + travelClass;
+            }
         }
         
-        // Mettre à jour le summary complet dans le modal
-        var fullSummary = document.getElementById('passenger-summary-full');
-        if (fullSummary) {
-            var parts = [];
-            if (passengers.adult > 0) parts.push(passengers.adult + ' Adulte' + (passengers.adult > 1 ? 's' : ''));
-            if (passengers.child > 0) parts.push(passengers.child + ' Enfant' + (passengers.child > 1 ? 's' : ''));
-            if (passengers.infant > 0) parts.push(passengers.infant + ' Bébé' + (passengers.infant > 1 ? 's' : ''));
-            fullSummary.innerText = parts.join(', ');
+        if (classSummary) {
+            if (currentMode === 'flights') {
+                classSummary.innerText = 'Classe ' + travelClass;
+                classSummary.classList.remove('hidden');
+            } else {
+                classSummary.classList.add('hidden');
+            }
+        }
+        
+        if (roomsSummary) {
+            if (currentMode === 'stays') {
+                roomsSummary.innerText = rooms + ' Chambre' + (rooms > 1 ? 's' : '');
+                roomsSummary.classList.remove('hidden');
+            } else {
+                roomsSummary.classList.add('hidden');
+            }
         }
     }
     
@@ -517,6 +620,8 @@ class TerraEngine {
             }, 200);
             qtySpan.innerText = newValue;
         }
+        
+        this.updatePassengerSummary();
     }
     
     /**
@@ -553,6 +658,8 @@ class TerraEngine {
             }
         }
         
+        this.updatePassengerSummary();
+        
         // Déclencher un événement
         var event = new CustomEvent('cabinChanged', { detail: { cabin: cabinCode } });
         document.dispatchEvent(event);
@@ -580,79 +687,163 @@ class TerraEngine {
     }
     
     /**
-     * Effectue la recherche
+     * Effectue la recherche (gère vols, hôtels et voitures)
      */
-    // Dans terra-engine.js - Modifier performSearch()
-
-async performSearch() {
-    const originInput = document.getElementById('originInput');
-    const mainInput = document.getElementById('mainInput');
-    const searchBtn = document.querySelector('.search-btn');
-    
-    let destination = mainInput?.value?.trim();
-    let origin = originInput?.value?.trim() || 'Kinshasa';
-    
-    if (!destination) {
-        this.showNotification('Veuillez sélectionner une destination', 'warning');
-        mainInput?.focus();
-        return;
-    }
-    
-    // Animation du bouton
-    if (searchBtn) {
-        searchBtn.classList.add('loading');
-        searchBtn.disabled = true;
-    }
-    
-    // Afficher un indicateur de traduction
-    this.showNotification(`🔍 Traduction de "${origin}" et "${destination}" en codes aéroport...`, 'info');
-    
-    try {
-        const passengers = state.get('passengers');
+    async performSearch() {
+        var originInput = document.getElementById('originInput');
+        var mainInput = document.getElementById('mainInput');
+        var searchBtn = document.querySelector('.search-btn');
         
-        const searchData = {
-            origin: origin,
-            destination: destination,
-            departureDate: state.get('departureDate'),
-            returnDate: state.get('returnDate'),
-            adults: passengers.adult,
-            children: passengers.child,
-            infants: passengers.infant,
-            class: state.get('travelClassCode'),
-            tripType: state.get('tripType')
-        };
+        var destination = mainInput ? mainInput.value.trim() : '';
+        var origin = (originInput ? originInput.value.trim() : 'Kinshasa');
         
-        // Utiliser le nouvel endpoint multi-aéroports
-        const response = await fetch(`${api.baseUrl}/flights/search-multi`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(searchData)
-        });
-        
-        const results = await response.json();
-        
-        if (results.search_details) {
-            console.log('Traduction:', results.search_details);
-            this.showNotification(`📍 ${origin} → ${results.search_details.origin_codes.join(', ')} | ${destination} → ${results.search_details.destination_codes.join(', ')}`, 'success');
+        if (!destination) {
+            this.showNotification('Veuillez sélectionner une destination', 'warning');
+            if (mainInput) mainInput.focus();
+            return;
         }
         
-        sessionStorage.setItem('last_search_results', JSON.stringify(results));
-        sessionStorage.setItem('search_type', 'flight');
-        sessionStorage.setItem('flight_dest', destination);
-        sessionStorage.setItem('search_params', JSON.stringify(searchData));
+        // Récupérer le mode actuel
+        var currentMode = state.get('currentMode');
         
-        window.location.href = './results.html';
-        
-    } catch (error) {
-        console.error('Search error:', error);
-        this.showNotification('Erreur lors de la recherche', 'error');
-        
+        // Animation du bouton
         if (searchBtn) {
-            searchBtn.classList.remove('loading');
-            searchBtn.disabled = false;
+            searchBtn.classList.add('loading');
+            searchBtn.disabled = true;
+        }
+        
+        // Afficher un indicateur selon le mode
+        if (currentMode === 'stays') {
+            this.showNotification('🔍 Recherche d\'hôtels à "' + destination + '"...', 'info');
+        } else if (currentMode === 'cars') {
+            this.showNotification('🔍 Recherche de voitures à "' + destination + '"...', 'info');
+        } else {
+            this.showNotification('🔍 Recherche de vols de "' + origin + '" à "' + destination + '"...', 'info');
+        }
+        
+        try {
+            var passengers = state.get('passengers');
+            var departureDate = state.get('departureDate');
+            var returnDate = state.get('returnDate');
+            
+            var results;
+            var searchType;
+            
+            // === VOLS ===
+            if (currentMode === 'flights') {
+                var searchData = {
+                    origin: origin,
+                    destination: destination,
+                    departureDate: departureDate,
+                    returnDate: returnDate,
+                    adults: passengers.adult,
+                    children: passengers.child,
+                    infants: passengers.infant,
+                    class: state.get('travelClassCode'),
+                    tripType: state.get('tripType')
+                };
+                
+                console.log('📡 Recherche de vols:', searchData);
+                
+                var response = await fetch(api.baseUrl + '/flights/search-multi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(searchData)
+                });
+                
+                results = await response.json();
+                searchType = 'flight';
+                
+                if (results.search_details) {
+                    console.log('Traduction:', results.search_details);
+                    this.showNotification(
+                        '📍 ' + origin + ' → ' + (results.search_details.origin_codes ? results.search_details.origin_codes.join(', ') : origin) + ' | ' + destination + ' → ' + (results.search_details.destination_codes ? results.search_details.destination_codes.join(', ') : destination),
+                        'success'
+                    );
+                }
+                
+                if (results.count === 0 || !results.flights || results.flights.length === 0) {
+                    this.showNotification('Aucun vol trouvé pour ces critères. Essayez d\'autres dates.', 'warning');
+                    if (searchBtn) {
+                        searchBtn.classList.remove('loading');
+                        searchBtn.disabled = false;
+                    }
+                    return;
+                }
+            }
+            
+            // === HÔTELS ===
+            else if (currentMode === 'stays') {
+                var searchData = {
+                    city: destination,
+                    checkIn: departureDate,
+                    checkOut: returnDate || departureDate,
+                    adults: passengers.adult,
+                    children: passengers.child,
+                    rooms: state.get('rooms') || 1
+                };
+                
+                console.log('📡 Recherche d\'hôtels:', searchData);
+                
+                var response = await fetch(api.baseUrl + '/stays/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(searchData)
+                });
+                
+                results = await response.json();
+                searchType = 'hotel';
+                
+                if (results.count === 0 || !results.stays || results.stays.length === 0) {
+                    this.showNotification('Aucun hôtel trouvé pour ces critères. Essayez d\'autres dates.', 'warning');
+                    if (searchBtn) {
+                        searchBtn.classList.remove('loading');
+                        searchBtn.disabled = false;
+                    }
+                    return;
+                }
+            }
+            
+            // === VOITURES ===
+            else if (currentMode === 'cars') {
+                var response = await fetch(api.baseUrl + '/cars');
+                results = await response.json();
+                searchType = 'car';
+                
+                if (results.count === 0 || !results.cars || results.cars.length === 0) {
+                    this.showNotification('Aucun véhicule trouvé pour ces critères.', 'warning');
+                    if (searchBtn) {
+                        searchBtn.classList.remove('loading');
+                        searchBtn.disabled = false;
+                    }
+                    return;
+                }
+            }
+            
+            // Stocker les résultats
+            sessionStorage.setItem('last_search_results', JSON.stringify(results));
+            sessionStorage.setItem('search_type', searchType);
+            sessionStorage.setItem('flight_dest', destination);
+            sessionStorage.setItem('search_params', JSON.stringify({
+                mode: currentMode,
+                destination: destination,
+                departureDate: departureDate,
+                returnDate: returnDate
+            }));
+            
+            // Redirection vers la page des résultats
+            window.location.href = './results.html';
+            
+        } catch (error) {
+            console.error('❌ Search error:', error);
+            this.showNotification('Erreur lors de la recherche: ' + error.message, 'error');
+            
+            if (searchBtn) {
+                searchBtn.classList.remove('loading');
+                searchBtn.disabled = false;
+            }
         }
     }
-}
     
     /**
      * Affiche une notification toast
@@ -742,7 +933,7 @@ async performSearch() {
     }
     
     /**
-     * Ouvre le modal des packages (délégué au composant)
+     * Ouvre le modal des packages
      */
     openPackageModal(packageId) {
         if (this.components.packageModal) {
@@ -807,6 +998,9 @@ window.setTripType = function(type) {
 };
 window.updateQty = function(type, delta, event) {
     terraEngine.updateQty(type, delta, event);
+};
+window.updateRooms = function(delta, event) {
+    terraEngine.updateRooms(delta, event);
 };
 window.setCabin = function(cabin) {
     terraEngine.setCabin(cabin);
