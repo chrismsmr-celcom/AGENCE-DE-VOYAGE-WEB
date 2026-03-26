@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terra Voyage - Détails de l'offre</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+    <style>
+        .detail-card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            font-weight: 800;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-montserrat">
+
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm py-4 px-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-black">Terra<span class="text-blue-600">Voyage</span></a>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500">Étape 1/3</span>
+                <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="w-1/3 h-full bg-blue-600 rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6">
+        <!-- Contenu dynamique -->
+        <div id="details-container"></div>
+    </main>
+
+    <script type="module" src="./js/pages/details.js"></script>
+</body>
+</html>
