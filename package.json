@@ -1,11 +1,11 @@
 {
   "name": "terra-voyage-hub",
-  "version": "3.2.0",
-  "description": "API Hub Central pour Terra Voyage",
+  "version": "4.0.0",
+  "description": "API Hub Central pour Terra Voyage - Version Premium",
   "main": "server.js",
   "scripts": {
-    "start": "node server-central.js",
-    "dev": "node --watch server-central.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "@duffel/api": "^3.0.0",
@@ -17,5 +17,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
