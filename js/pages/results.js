@@ -1,6 +1,7 @@
 /**
  * TERRA VOYAGE - RESULTS PAGE
  * Affichage des résultats de recherche avec filtres et tri
+ * Version complète avec gestion des vols et hôtels
  */
 
 import { api } from '../core/api-client.js';
@@ -11,8 +12,14 @@ import { sanitize } from '../utils/validators.js';
 // CONSTANTES ET CONFIGURATION
 // ============================================
 
+// URL de l'API backend sur Render
+const API_BASE_URL = 'https://agence-de-voyage-web.onrender.com/api';
+
 // Logo par défaut en data URI (évite les appels externes)
 const DEFAULT_LOGO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40' viewBox='0 0 60 40'%3E%3Crect width='60' height='40' fill='%233b82f6'/%3E%3Ctext x='30' y='25' font-size='12' font-family='monospace' text-anchor='middle' fill='white'%3E✈️%3C/text%3E%3C/svg%3E";
+
+// Image par défaut pour les hôtels
+const DEFAULT_HOTEL_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='300' height='200' fill='%23f3f4f6'/%3E%3Ctext x='150' y='100' text-anchor='middle' dy='.3em' fill='%239ca3af'%3E🏨%3C/text%3E%3C/svg%3E";
 
 // Variables globales
 let currentResults = [];
@@ -30,13 +37,11 @@ let currentFilters = {
 // ============================================
 
 /**
- * Récupère le logo d'une compagnie aérienne via l'API locale
- * Utilise la table airline_logos de Supabase
+ * Récupère le logo d'une compagnie aérienne via l'API Render
  */
 function getAirlineLogo(iataCode) {
     const code = (iataCode || 'AIR').toUpperCase();
-    // Utiliser l'endpoint API local qui interroge Supabase
-    return `/api/airline-logo/${code}`;
+    return `${API_BASE_URL}/airline-logo/${code}`;
 }
 
 function getAirlineName(offer) {
@@ -83,7 +88,7 @@ function getTimeOfDayCategory(hour) {
 }
 
 // ============================================
-// FILTRES
+// FILTRES VOLS
 // ============================================
 
 function applyFilters(offers) {
@@ -142,32 +147,82 @@ function sortOffers(offers, sortType) {
 }
 
 // ============================================
+// FILTRES HÔTELS
+// ============================================
+
+function applyHotelFilters(hotels) {
+    return hotels.filter(function(hotel) {
+        var price = hotel.price_per_night || hotel.price || hotel.totalPrice || 0;
+        if (price > currentFilters.maxPrice) return false;
+        return true;
+    });
+}
+
+function sortHotels(hotels, sortType) {
+    var sorted = [...hotels];
+    switch(sortType) {
+        case 'price_asc':
+            return sorted.sort(function(a, b) {
+                var pa = a.price_per_night || a.price || a.totalPrice || 0;
+                var pb = b.price_per_night || b.price || b.totalPrice || 0;
+                return pa - pb;
+            });
+        case 'price_desc':
+            return sorted.sort(function(a, b) {
+                var pa = a.price_per_night || a.price || a.totalPrice || 0;
+                var pb = b.price_per_night || b.price || b.totalPrice || 0;
+                return pb - pa;
+            });
+        default:
+            return sorted;
+    }
+}
+
+// ============================================
 // MISE À JOUR DE L'INTERFACE
 // ============================================
 
 function updateResultsDisplay() {
-    var filtered = applyFilters(currentResults);
-    var sorted = sortOffers(filtered, document.getElementById('sort-select')?.value || 'price_asc');
-    
     var resultsContainer = document.getElementById('results-list');
     var countLabel = document.getElementById('results-count');
     var footerCount = document.getElementById('footer-results-count');
     var emptyState = document.getElementById('empty-state');
     
-    if (countLabel) countLabel.innerText = sorted.length + ' RÉSULTATS';
-    if (footerCount) footerCount.innerText = sorted.length + ' RÉSULTATS';
-    
-    if (sorted.length === 0) {
-        if (emptyState) emptyState.classList.remove('hidden');
-        if (resultsContainer) resultsContainer.innerHTML = '';
-        return;
-    }
-    
-    if (emptyState) emptyState.classList.add('hidden');
+    var sorted = [];
     
     if (currentSearchType === 'flight') {
+        var filtered = applyFilters(currentResults);
+        sorted = sortOffers(filtered, document.getElementById('sort-select')?.value || 'price_asc');
+        
+        if (sorted.length === 0) {
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (resultsContainer) resultsContainer.innerHTML = '';
+            if (countLabel) countLabel.innerText = '0 RÉSULTATS';
+            if (footerCount) footerCount.innerText = '0 RÉSULTATS';
+            return;
+        }
+        
+        if (emptyState) emptyState.classList.add('hidden');
         resultsContainer.innerHTML = renderFlights(sorted);
+        
+    } else if (currentSearchType === 'hotel') {
+        var filteredHotels = applyHotelFilters(currentResults);
+        sorted = sortHotels(filteredHotels, document.getElementById('sort-select')?.value || 'price_asc');
+        
+        if (sorted.length === 0) {
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (resultsContainer) resultsContainer.innerHTML = '';
+            if (countLabel) countLabel.innerText = '0 RÉSULTATS';
+            if (footerCount) footerCount.innerText = '0 RÉSULTATS';
+            return;
+        }
+        
+        if (emptyState) emptyState.classList.add('hidden');
+        resultsContainer.innerHTML = renderHotels(sorted);
     }
+    
+    if (countLabel) countLabel.innerText = sorted.length + ' RÉSULTATS';
+    if (footerCount) footerCount.innerText = sorted.length + ' RÉSULTATS';
 }
 
 function updateRecommendation(offers) {
@@ -175,16 +230,28 @@ function updateRecommendation(offers) {
     var text = document.getElementById('recommendation-text');
     if (!banner || !text || offers.length === 0) return;
     
-    var bestOffer = offers.reduce(function(prev, curr) {
-        var p1 = prev.total_amount || prev.totalAmount || prev.price || 0;
-        var p2 = curr.total_amount || curr.totalAmount || curr.price || 0;
-        return p1 < p2 ? prev : curr;
-    });
-    
-    var price = bestOffer.total_amount || bestOffer.totalAmount || bestOffer.price || 0;
-    var airlineName = getAirlineName(bestOffer);
-    text.innerHTML = '✈️ ' + airlineName + ' - Dès ' + formatPrice(price) + ' • Meilleur rapport qualité-prix';
-    banner.classList.remove('hidden');
+    if (currentSearchType === 'flight') {
+        var bestOffer = offers.reduce(function(prev, curr) {
+            var p1 = prev.total_amount || prev.totalAmount || prev.price || 0;
+            var p2 = curr.total_amount || curr.totalAmount || curr.price || 0;
+            return p1 < p2 ? prev : curr;
+        });
+        
+        var price = bestOffer.total_amount || bestOffer.totalAmount || bestOffer.price || 0;
+        var airlineName = getAirlineName(bestOffer);
+        text.innerHTML = '✈️ ' + airlineName + ' - Dès ' + formatPrice(price) + ' • Meilleur rapport qualité-prix';
+        banner.classList.remove('hidden');
+    } else if (currentSearchType === 'hotel' && offers.length > 0) {
+        var bestHotel = offers.reduce(function(prev, curr) {
+            var p1 = prev.price_per_night || prev.price || prev.totalPrice || 0;
+            var p2 = curr.price_per_night || curr.price || curr.totalPrice || 0;
+            return p1 < p2 ? prev : curr;
+        });
+        
+        var price = bestHotel.price_per_night || bestHotel.price || bestHotel.totalPrice || 0;
+        text.innerHTML = '🏨 ' + (bestHotel.name || 'Hôtel de luxe') + ' - Dès ' + formatPrice(price) + '/nuit • Meilleur rapport qualité-prix';
+        banner.classList.remove('hidden');
+    }
 }
 
 function initFilters() {
@@ -203,18 +270,21 @@ function initFilters() {
         });
     }
     
-    if (filterDirect) {
-        filterDirect.addEventListener('change', function(e) {
-            currentFilters.directOnly = e.target.checked;
-            updateResultsDisplay();
-        });
-    }
-    
-    if (filterOneStop) {
-        filterOneStop.addEventListener('change', function(e) {
-            currentFilters.oneStopMax = e.target.checked;
-            updateResultsDisplay();
-        });
+    // Filtres spécifiques aux vols (masqués pour les hôtels)
+    if (currentSearchType === 'flight') {
+        if (filterDirect) {
+            filterDirect.addEventListener('change', function(e) {
+                currentFilters.directOnly = e.target.checked;
+                updateResultsDisplay();
+            });
+        }
+        
+        if (filterOneStop) {
+            filterOneStop.addEventListener('change', function(e) {
+                currentFilters.oneStopMax = e.target.checked;
+                updateResultsDisplay();
+            });
+        }
     }
     
     if (sortSelect) {
@@ -360,6 +430,65 @@ function renderFlights(offers) {
 }
 
 // ============================================
+// RENDU DES HÔTELS (NOUVEAU)
+// ============================================
+
+function renderHotels(hotels) {
+    if (!hotels || hotels.length === 0) return '';
+    
+    return hotels.map(function(hotel, index) {
+        var price = hotel.price_per_night || hotel.price || hotel.totalPrice || 150;
+        var photo = hotel.main_photo || hotel.images?.[0] || DEFAULT_HOTEL_IMAGE;
+        var rating = hotel.rating || 4;
+        var name = hotel.name || 'Hôtel de Luxe';
+        var address = hotel.address || hotel.city || 'Localisation premium';
+        
+        // Générer les étoiles
+        var fullStars = Math.floor(rating);
+        var stars = '';
+        for (var i = 0; i < fullStars; i++) stars += '<i class="fas fa-star text-yellow-400 text-sm"></i>';
+        for (var i = fullStars; i < 5; i++) stars += '<i class="far fa-star text-gray-300 text-sm"></i>';
+        
+        return `
+            <div class="result-card overflow-hidden" style="animation-delay: ${index * 0.05}s">
+                <div class="flex flex-col md:flex-row">
+                    <img src="${photo}" class="w-full md:w-64 h-48 object-cover" 
+                         onerror="this.src='${DEFAULT_HOTEL_IMAGE}'">
+                    <div class="p-6 flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-xl text-gray-800">${sanitize(name)}</h3>
+                                <p class="text-gray-500 text-sm mt-1">
+                                    <i class="fas fa-map-marker-alt mr-1"></i> ${sanitize(address)}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                ${stars}
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            ${hotel.amenities ? hotel.amenities.slice(0, 3).map(function(amenity) {
+                                return `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">${sanitize(amenity)}</span>`;
+                            }).join('') : '<span class="text-xs text-gray-400">Wi-Fi inclus</span>'}
+                        </div>
+                        <div class="flex justify-between items-end mt-4">
+                            <div>
+                                <span class="text-2xl font-bold text-blue-600">${formatPrice(price)}</span>
+                                <span class="text-gray-500">/nuit</span>
+                                ${hotel.totalPrice ? `<p class="text-xs text-gray-400">Total: ${formatPrice(hotel.totalPrice)}</p>` : ''}
+                            </div>
+                            <button onclick="bookHotel('${hotel.id}')" class="btn-premium px-6 py-2 text-xs">
+                                <i class="fas fa-bed mr-1"></i> Voir l'offre
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================
 // INITIALISATION
 // ============================================
 
@@ -386,8 +515,12 @@ async function init() {
     currentSearchType = searchType;
     
     var results = [];
-    if (searchType === 'flight' && data?.flights) results = data.flights;
-    else if (searchType === 'hotel' && data?.hotels) results = data.hotels;
+    if (searchType === 'flight' && data?.flights) {
+        results = data.flights;
+    } else if (searchType === 'hotel') {
+        // Gérer les deux formats possibles
+        results = data?.stays || data?.hotels || [];
+    }
     
     currentResults = results;
     if (loader) loader.style.display = 'none';
@@ -407,6 +540,17 @@ async function init() {
         initFilters();
         updateResultsDisplay();
         updateRecommendation(results);
+    } else if (searchType === 'hotel') {
+        // Pour les hôtels, on initialise les filtres sans les filtres de compagnies
+        initFilters();
+        updateResultsDisplay();
+        updateRecommendation(results);
+        
+        // Cacher les filtres spécifiques aux vols
+        var flightFilters = document.querySelectorAll('#filter-direct, #filter-one-stop, .airline-filters-section');
+        flightFilters.forEach(function(el) {
+            if (el) el.style.display = 'none';
+        });
     }
 }
 
@@ -415,11 +559,11 @@ async function init() {
 // ============================================
 
 window.bookFlight = function(id) {
-    alert('✨ Réservation en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
+    alert('✨ Réservation du vol en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
 };
 
 window.bookHotel = function(id) {
-    alert('✨ Réservation en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
+    alert('✨ Réservation de l\'hôtel en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
 };
 
 document.addEventListener('DOMContentLoaded', init);
