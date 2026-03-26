@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Terra Voyage | Luxe & Sérénité</title>
+    
+    <!-- Tailwind CSS (version stable avec configuration personnalisée) -->
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#ef4444',
+                    },
+                    fontFamily: {
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Font Awesome 6 (version optimisée) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts (Montserrat) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Styles personnalisés -->
+    <link rel="stylesheet" href="./css/style.css">
+    
+    <!-- Flatpickr (calendrier) avec fallback -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script>
+    <script>
+        // Vérifier que flatpickr est chargé
+        if (typeof flatpickr === 'undefined') {
+            console.warn('Flatpickr non chargé, tentative de chargement alternatif...');
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"><\/script>');
+            document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">');
+        }
+    </script>
+    
+    <!-- Swiper (carrousel) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <!-- Favicons avec fallback -->
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" onerror="this.href='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ctext y=\'.9em\' font-size=\'90\'%3E✈️%3C/text%3E%3C/svg%3E'">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/icon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+    <link rel="manifest" href="./assets/manifest.json">
+    
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Terra Voyage - Agence de voyage de luxe. Découvrez nos offres exclusives de vols, séjours et location de voitures dans le monde entier.">
+    <meta name="keywords" content="voyage, luxe, vol, hôtel, location voiture, Terra Voyage">
+    <meta name="author" content="Terra Voyage">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://terravoyage.com/">
+    <meta property="og:title" content="Terra Voyage | Luxe & Sérénité">
+    <meta property="og:description" content="Accédez à l'excellence technologique du réseau Terra Voyage pour des itinéraires sur-mesure.">
+    <meta property="og:image" content="https://terravoyage.com/assets/og-image.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://terravoyage.com/">
+    <meta property="twitter:title" content="Terra Voyage | Luxe & Sérénité">
+    <meta property="twitter:description" content="Accédez à l'excellence technologique du réseau Terra Voyage pour des itinéraires sur-mesure.">
+    <meta property="twitter:image" content="https://terravoyage.com/assets/og-image.jpg">
+    
+    <!-- Preconnect pour améliorer les performances -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Styles critiques pour éviter le FOUC -->
+    <style>
+        /* Styles critiques pour le chargement initial */
+        body { opacity: 0; transition: opacity 0.3s ease; }
+        body.loaded { opacity: 1; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s ease-in-out; background-size: cover; background-position: center; }
+        .hero-slide.active { opacity: 1; }
+        .nav-transparent { background: transparent; }
+    </style>
+    
+    <script>
+        // Marquer le body comme chargé
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('loaded');
+        });
+        
+        // Gestionnaire d'erreur pour les ressources
+        window.addEventListener('error', (e) => {
+            if (e.target.tagName === 'IMG') {
+                console.warn('Image non chargée:', e.target.src);
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af"%3E✈️%3C/text%3E%3C/svg%3E';
+            }
+        }, true);
+    </script>
+    
+    <style>
+        /* Styles additionnels critiques pour le chargement initial */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+        .hero-slide.active { opacity: 1; }
+        .hero-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+        }
+        .nav-transparent { background: transparent; }
+        .nav-scrolled {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            height: 70px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .nav-scrolled #logo {
+            filter: brightness(0) invert(0) !important;
+            height: 50px !important;
+        }
+        .nav-scrolled #navLinks a { color: #1f2937; }
+        .nav-scrolled #gdsBtn {
+            border-color: #1f2937;
+            color: #1f2937;
+        }
+        .nav-scrolled #gdsBtn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+        #logo { transition: all 0.3s ease; height: 70px; }
+        .search-btn.loading { opacity: 0.7; pointer-events: none; }
+        .search-btn.loading i.fa-search { animation: spin 1s linear infinite; }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .passenger-dropdown {
+            transition: all 0.2s ease;
+            transform-origin: top right;
+        }
+        .passenger-dropdown:not(.hidden) {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .cabin-btn.active-cabin {
+            background-color: #eff6ff;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        .trip-type-btn.active {
+            background: #2563eb;
+            color: white;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .passenger-dropdown {
+                position: fixed !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                border-radius: 1.5rem 1.5rem 0 0 !important;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<!-- HEADER -->
+<!-- HEADER -->
+<header id="mainHeader" class="fixed top-0 left-0 w-full z-50 nav-transparent h-24 transition-all duration-500 flex items-center">
+    <div class="max-w-7xl mx-auto px-8 w-full flex items-center justify-between">
+        <img src="https://i.postimg.cc/j5VzVV3c/YABISO-VOYAGE-20251216-035622-0000-removebg-preview.png" 
+             class="h-20 md:h-20 object-contain brightness-0 invert-[1] transition-all duration-500" 
+             id="logo"
+             onerror="this.style.display='none'; this.parentElement.querySelector('.logo-fallback').style.display='block';">
+        <div class="logo-fallback text-white text-2xl font-black tracking-tighter hidden">
+            Terra<span class="text-red-500">Voyage</span>
+        </div>
+        
+        <nav class="hidden lg:flex gap-12 text-[11px] font-semibold uppercase tracking-[0.2em] text-white drop-shadow-lg" id="navLinks">
+            <a href="#destinations" class="hover:text-red-600 transition-colors relative group">
+                Destinations
+                <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full"></span>
+            </a>
+            <a href="#about" class="hover:text-red-600 transition-colors relative group">
+                L'Agence
+                <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full"></span>
+            </a>
+            <a href="#contact" class="hover:text-red-600 transition-colors relative group">
+                Conciergerie
+                <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full"></span>
+            </a>
+        </nav>
+
+        <div class="flex items-center gap-6">
+            <a href="https://wa.me/243854442103" 
+               class="hidden md:block text-[10px] font-bold uppercase tracking-widest px-6 py-3 border border-white rounded-full hover:bg-red-600 hover:border-red-600 hover:text-white transition-all text-white bg-black/20 backdrop-blur-sm shadow-sm" 
+               id="gdsBtn">
+                <i class="fab fa-whatsapp mr-2"></i> Privilège GDS
+            </a>
+            <button id="menu-btn" class="lg:hidden z-[110] relative p-2 focus:outline-none">
+                <div id="burger-icon" class="w-6 h-0.5 bg-white transition-all duration-300 relative before:content-[''] before:absolute before:w-6 before:h-0.5 before:bg-white before:-translate-y-2 before:transition-all after:content-[''] after:absolute after:w-6 after:h-0.5 after:bg-white after:translate-y-2 after:transition-all"></div>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- MENU MOBILE -->
+<div id="mobile-menu" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-between py-20 translate-x-full transition-transform duration-500 ease-in-out">
+    <button onclick="window.toggleMenu?.()" class="absolute top-8 right-8 w-14 h-14 flex items-center justify-center rounded-full bg-gray-50 hover:bg-red-50 transition-all group active:scale-95">
+        <i class="fas fa-times text-gray-400 group-hover:text-red-600 text-xl transition-colors"></i>
+    </button>
+    <div class="opacity-10">
+        <h3 class="text-xl font-black tracking-tighter uppercase">Terra<span class="text-red-600">Voyage</span></h3>
+    </div>
+    <nav class="flex flex-col gap-8 text-center">
+        <a href="#destinations" class="text-3xl font-light uppercase tracking-[0.3em] text-black hover:text-red-600 transition-colors" onclick="window.toggleMenu?.()">Destinations</a>
+        <a href="#about" class="text-3xl font-light uppercase tracking-[0.3em] text-black hover:text-red-600 transition-colors" onclick="window.toggleMenu?.()">L'Agence</a>
+        <a href="#contact" class="text-3xl font-black uppercase tracking-[0.3em] text-red-600" onclick="window.toggleMenu?.()">Conciergerie</a>
+    </nav>
+    <div class="flex flex-col items-center gap-8 w-full px-12">
+        <div class="w-12 h-[1px] bg-red-600 opacity-20"></div>
+        <div class="flex items-center gap-8">
+            <a href="#" class="text-gray-400 hover:text-black transition-colors"><i class="fab fa-x-twitter text-xl"></i></a>
+            <a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-linkedin-in text-xl"></i></a>
+            <a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-facebook-f text-xl"></i></a>
+            <a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-instagram text-xl"></i></a>
+            <a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-youtube text-xl"></i></a>
+        </div>
+        <div class="text-center">
+            <p class="text-[8px] font-bold tracking-[0.5em] text-gray-300 uppercase mb-2">Terra Voyage — Makem Groupe</p>
+            <p class="text-[10px] text-gray-400 font-medium italic">www.terravoyage.com</p>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION HERO -->
+<section id="home" class="relative min-h-screen flex items-center justify-center pt-20">
+    <div id="slider" class="absolute inset-0 z-0 overflow-hidden bg-gray-100">
+        <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073')"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1170')"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1585716517566-568f0646f456?q=80&w=1170')"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1566127808012-fdeb2e92a805?q=80&w=1113')"></div>
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1519659528534-7fd733a832a0?q=80&w=1026')"></div>
+        <div class="absolute inset-0 hero-overlay z-10"></div>
+    </div>
+
+    <div class="relative z-20 w-full max-w-5xl px-6 text-center mt-[-10vh]">
+        <div class="mb-12">
+            <span class="inline-block text-[10px] font-bold tracking-[0.5em] uppercase text-red-600 mb-4">Évasion Signature</span>
+            <h1 class="text-4xl md:text-6xl font-light tracking-tight text-gray-900 mb-6">Le voyage, <span class="font-semibold italic">redéfini.</span></h1>
+            <p class="text-gray-600 max-w-xl mx-auto text-sm md:text-base leading-relaxed font-light">Accédez à l'excellence technologique du réseau Terra Voyage pour des itinéraires sur-mesure.</p>
+        </div>
+
+<!-- BARRE DE RECHERCHE COMPACTE - VERSION ÉLÉGANTE -->
+<div class="max-w-5xl mx-auto px-4">
+    <!-- Onglets de mode -->
+    <div class="flex items-center gap-1 mb-2 ml-2 overflow-x-auto no-scrollbar">
+        <button onclick="window.TerraEngine?.changeMode('stays')" id="tab-stays" class="travala-tab active">
+            <div class="tab-icon-circle"><i class="fas fa-bed"></i></div>
+            <span>Séjours</span>
+        </button>
+        <button onclick="window.TerraEngine?.changeMode('flights')" id="tab-flights" class="travala-tab">
+            <div class="tab-icon-circle"><i class="fas fa-plane"></i></div>
+            <span>Vols</span>
+        </button>
+        <button onclick="window.TerraEngine?.changeMode('cars')" id="tab-cars" class="travala-tab relative">
+            <span class="new-badge">NEW!</span>
+            <div class="tab-icon-circle"><i class="fas fa-car"></i></div>
+            <span>Voitures</span>
+        </button>
+    </div>
+
+    <!-- Conteneur principal -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+        
+        <!-- Options type de voyage -->
+        <div id="flight-options" class="hidden px-4 pt-3 pb-1 border-b border-gray-100 bg-gray-50/50">
+            <div class="flex items-center gap-2">
+                <button onclick="window.TerraEngine?.setTripType('round_trip')" 
+                        class="trip-option active px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all duration-200">
+                    <i class="fas fa-exchange-alt mr-1 text-[9px]"></i> Aller-Retour
+                </button>
+                <button onclick="window.TerraEngine?.setTripType('one_way')" 
+                        class="trip-option px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all duration-200">
+                    <i class="fas fa-arrow-right mr-1 text-[9px]"></i> Aller Simple
+                </button>
+                <button onclick="window.TerraEngine?.setTripType('multi')" 
+                        class="trip-option px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all duration-200">
+                    <i class="fas fa-layer-group mr-1 text-[9px]"></i> Multi-villes
+                </button>
+            </div>
+        </div>
+
+        <!-- Corps principal -->
+        <div class="flex flex-col lg:flex-row">
+            
+            <!-- Section Lieux -->
+            <div class="flex-1 flex flex-col sm:flex-row border-b lg:border-b-0 lg:border-r border-gray-100">
+                <!-- Origine -->
+                <div id="box-origin" class="hidden flex-1 relative group">
+                    <div class="p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer">
+                        <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+                            <i class="fas fa-plane-departure text-blue-500 text-[9px]"></i>
+                            <span>Départ</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="originInput" placeholder="Kinshasa (FIH)" 
+                                   class="search-input w-full bg-transparent border-none p-0 text-sm font-semibold focus:ring-0 uppercase placeholder-gray-300 outline-none">
+                        </div>
+                    </div>
+                    <div id="origin-results" class="absolute z-50 w-full left-0 top-full mt-0.5 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden hidden"></div>
+                </div>
+
+                <!-- Destination -->
+                <div id="box-destination" class="flex-1 relative group">
+                    <div class="p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer">
+                        <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+                            <i class="fas fa-map-marker-alt text-red-500 text-[9px]"></i>
+                            <span id="label-main">Destination</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="mainInput" placeholder="Paris (CDG)" 
+                                   class="search-input w-full bg-transparent border-none p-0 text-sm font-semibold focus:ring-0 uppercase placeholder-gray-300 outline-none">
+                        </div>
+                    </div>
+                    <div id="dest-results" class="absolute z-50 w-full left-0 top-full mt-0.5 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden hidden"></div>
+                </div>
+            </div>
+
+            <!-- Section Dates -->
+            <div class="flex-1 flex border-b lg:border-b-0 lg:border-r border-gray-100">
+                <div class="flex-1 p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer group" 
+                     onclick="window.TerraEngine?.openDatePicker('departure')">
+                    <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+                        <i class="far fa-calendar-alt text-blue-500 text-[9px]"></i>
+                        <span>Départ</span>
+                    </label>
+                    <div>
+                        <span id="display-checkin" class="text-sm font-semibold text-gray-700">Choisir</span>
+                        <p id="display-checkin-day" class="text-[9px] text-gray-400 mt-0.5 hidden"></p>
+                    </div>
+                </div>
+                <div id="box-return" class="flex-1 p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer group" 
+                     onclick="window.TerraEngine?.openDatePicker('return')">
+                    <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+                        <i class="far fa-calendar-alt text-gray-400 text-[9px]"></i>
+                        <span>Retour</span>
+                    </label>
+                    <div>
+                        <span id="display-checkout" class="text-sm font-semibold text-gray-700">Flexible</span>
+                        <p id="display-checkout-day" class="text-[9px] text-gray-400 mt-0.5 hidden"></p>
+                    </div>
+                </div>
+                <input type="text" id="date-picker-input" class="hidden">
+            </div>
+
+            <!-- Section Passagers -->
+            <div class="relative border-b lg:border-b-0 lg:border-r border-gray-100">
+                <div class="p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer" 
+                     onclick="window.TerraEngine?.togglePassengers(event)">
+                    <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+                        <i class="fas fa-user-group text-purple-500 text-[9px]"></i>
+                        <span>Voyageurs</span>
+                    </label>
+                    <div>
+                        <span id="passenger-summary" class="text-sm font-semibold text-gray-700">1 Adulte</span>
+                        <p id="class-summary" class="text-[9px] text-gray-400 mt-0.5">Classe Économique</p>
+                    </div>
+                </div>
+
+                <!-- Modal passagers -->
+                <div id="passenger-modal" class="passenger-dropdown hidden absolute top-full right-0 mt-2 w-80 bg-white shadow-2xl rounded-2xl border border-gray-100 z-50 overflow-hidden" onclick="event.stopPropagation()">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3.5">
+                        <h4 class="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-users"></i> Configuration du voyage
+                        </h4>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <!-- Adultes -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Adultes</p>
+                                <p class="text-[9px] text-gray-400">12 ans et plus</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button type="button" onclick="window.TerraEngine?.updateQty('adult', -1, event)" 
+                                        class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span id="qty-adult" class="text-base font-bold w-6 text-center">1</span>
+                                <button type="button" onclick="window.TerraEngine?.updateQty('adult', 1, event)" 
+                                        class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Enfants -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Enfants</p>
+                                <p class="text-[9px] text-gray-400">2 à 11 ans</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button type="button" onclick="window.TerraEngine?.updateQty('child', -1, event)" 
+                                        class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span id="qty-child" class="text-base font-bold w-6 text-center">0</span>
+                                <button type="button" onclick="window.TerraEngine?.updateQty('child', 1, event)" 
+                                        class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Bébés -->
+                        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Bébés</p>
+                                <p class="text-[9px] text-gray-400">Moins de 2 ans (sans siège)</p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <button type="button" onclick="window.TerraEngine?.updateQty('infant', -1, event)" 
+                                        class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span id="qty-infant" class="text-base font-bold w-6 text-center">0</span>
+                                <button type="button" onclick="window.TerraEngine?.updateQty('infant', 1, event)" 
+                                        class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Classes -->
+                        <div>
+                            <p class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">Classe de voyage</p>
+                            <div class="grid grid-cols-4 gap-1.5">
+                                <button type="button" onclick="window.TerraEngine?.setCabin('economy')" 
+                                        id="cabin-economy" 
+                                        class="cabin-btn active-cabin py-2 text-[10px] font-bold rounded-xl border transition-all">
+                                    <i class="fas fa-chair text-[9px]"></i> Éco
+                                </button>
+                                <button type="button" onclick="window.TerraEngine?.setCabin('premium_economy')" 
+                                        id="cabin-premium_economy" 
+                                        class="cabin-btn py-2 text-[10px] font-bold rounded-xl border transition-all">
+                                    <i class="fas fa-couch text-[9px]"></i> Premium
+                                </button>
+                                <button type="button" onclick="window.TerraEngine?.setCabin('business')" 
+                                        id="cabin-business" 
+                                        class="cabin-btn py-2 text-[10px] font-bold rounded-xl border transition-all">
+                                    <i class="fas fa-briefcase text-[9px]"></i> Affaires
+                                </button>
+                                <button type="button" onclick="window.TerraEngine?.setCabin('first')" 
+                                        id="cabin-first" 
+                                        class="cabin-btn py-2 text-[10px] font-bold rounded-xl border transition-all">
+                                    <i class="fas fa-crown text-[9px]"></i> 1ère
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.TerraEngine?.togglePassengers(event)" 
+                                class="w-full py-2.5 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-blue-700 transition-all shadow-md mt-1">
+                            <i class="fas fa-check-circle mr-1.5"></i> Confirmer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton Rechercher (corrigé avec group) -->
+            <button onclick="window.TerraEngine?.performSearch()" 
+                    class="search-btn group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-7 py-3.5 text-[11px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 min-w-[110px]">
+                <i class="fas fa-search text-white text-xs"></i>
+                <span>Rechercher</span>
+                <i class="fas fa-arrow-right text-white text-[9px] opacity-70 transition-all group-hover:translate-x-1"></i>
+            </button>
+        </div>
+
+        <!-- Multi-villes container -->
+        <div id="multi-city-container" class="hidden border-t border-gray-100 p-4 bg-gray-50/60">
+            <div id="multi-city-list" class="space-y-3"></div>
+            <button onclick="window.TerraEngine?.addMultiCityRow()" 
+                    class="mt-3 text-[9px] font-bold text-blue-600 uppercase flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-blue-200 shadow-sm hover:shadow-md transition-all hover:border-blue-300">
+                <i class="fas fa-plus-circle text-blue-500 text-[10px]"></i> Ajouter un trajet
+            </button>
+        </div>
+    </div>
+</div>
+</section>
+<!-- SECTION ABOUT -->
+<section id="about" class="py-32 bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row items-center gap-20">
+            <div class="md:w-1/2 space-y-8">
+                <p class="text-[10px] font-black uppercase tracking-[0.5em] text-blue-600">Notre Signature</p>
+                <h2 class="text-4xl md:text-5xl font-light text-gray-900 leading-tight">Relier les <span class="font-black italic">cœurs</span>, explorer les <span class="font-black">cultures</span>.</h2>
+                <p class="text-lg text-gray-500 leading-relaxed font-light">Chez <span class="text-black font-bold">Terra Voyage</span>, nous croyons que la Terre n'est pas une destination, mais une maison partagée. Faciliter vos déplacements, c'est avant tout vous permettre de découvrir l'autre et de vivre des émotions qui marquent une vie.</p>
+                <p class="text-xl text-gray-800 italic font-medium border-l-2 border-blue-600 pl-6">"Puisque nous sommes tous sur une même planète, allons vers les étoiles en toute sérénité."</p>
+            </div>
+            <div class="md:w-1/2 relative">
+                <div class="aspect-square rounded-2xl overflow-hidden shadow-2xl">
+                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1170" alt="Culture et Voyage" class="w-full h-full object-cover">
+                </div>
+                <div class="absolute -bottom-10 -left-10 bg-black text-white p-8 rounded-2xl shadow-2xl hidden md:block">
+                    <p class="text-3xl font-black italic">+180</p>
+                    <p class="text-[9px] uppercase tracking-widest text-gray-400">Pays connectés</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION DESTINATIONS -->
+<section id="destinations" class="py-32 bg-white px-8">
+    <div class="max-w-7xl mx-auto text-center mb-20">
+        <h2 class="text-3xl font-light tracking-tight mb-4 uppercase">Destinations <span class="font-black italic text-red-600">Inspirantes</span></h2>
+        <div class="w-12 h-1 bg-red-600 mx-auto rounded-full opacity-20"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+        <div class="group cursor-pointer" onclick="window.openPackageModal?.('paris')">
+            <div class="relative h-[450px] overflow-hidden rounded-3xl mb-6 shadow-sm group-hover:shadow-2xl transition-all duration-500">
+                <img src="https://images.unsplash.com/photo-1609971757431-439cf7b4141b?q=80&w=1887" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white border border-white/50 px-6 py-2 rounded-full text-[10px] tracking-[0.3em] uppercase backdrop-blur-sm transition-all">Voir l'offre</span>
+                </div>
+                <div class="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-xl"><p class="text-xs font-black text-red-600">Dès 1.250$</p></div>
+            </div>
+            <h3 class="text-sm font-semibold uppercase tracking-widest">Paris Privé</h3>
+            <p class="text-xs text-gray-400 mt-1">L'élégance à la française</p>
+        </div>
+        <div class="group cursor-pointer" onclick="window.openPackageModal?.('capetown')">
+            <div class="relative h-[450px] overflow-hidden rounded-3xl mb-6 shadow-sm group-hover:shadow-2xl transition-all duration-500">
+                <img src="https://plus.unsplash.com/premium_photo-1754251271483-ccdf235a62f3?q=80&w=1904" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white border border-white/50 px-6 py-2 rounded-full text-[10px] tracking-[0.3em] uppercase backdrop-blur-sm transition-all">Voir l'offre</span>
+                </div>
+                <div class="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-xl"><p class="text-xs font-black text-red-600">Dès 1.850$</p></div>
+            </div>
+            <h3 class="text-sm font-semibold uppercase tracking-widest">Cape Town Safari</h3>
+            <p class="text-xs text-gray-400 mt-1">Entre océan et montagnes</p>
+        </div>
+        <div class="group cursor-pointer" onclick="window.openPackageModal?.('istanbul')">
+            <div class="relative h-[450px] overflow-hidden rounded-3xl mb-6 shadow-sm group-hover:shadow-2xl transition-all duration-500">
+                <img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=2071" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white border border-white/50 px-6 py-2 rounded-full text-[10px] tracking-[0.3em] uppercase backdrop-blur-sm transition-all">Voir l'offre</span>
+                </div>
+                <div class="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-xl"><p class="text-xs font-black text-red-600">Dès 950$</p></div>
+            </div>
+            <h3 class="text-sm font-semibold uppercase tracking-widest">Bosphore Gold</h3>
+            <p class="text-xs text-gray-400 mt-1">Le pont des civilisations</p>
+        </div>
+        <div class="group cursor-pointer" onclick="window.openPackageModal?.('canton')">
+            <div class="relative h-[450px] overflow-hidden rounded-3xl mb-6 shadow-sm group-hover:shadow-2xl transition-all duration-500">
+                <img src="https://images.unsplash.com/photo-1559035871-4b9dcf31885c?q=80&w=1374" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white border border-white/50 px-6 py-2 rounded-full text-[10px] tracking-[0.3em] uppercase backdrop-blur-sm transition-all">Business Trip</span>
+                </div>
+                <div class="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-xl"><p class="text-xs font-black text-red-600">Dès 2.100$</p></div>
+            </div>
+            <h3 class="text-sm font-semibold uppercase tracking-widest">Foire de Canton</h3>
+            <p class="text-xs text-gray-400 mt-1">Business & Sourcing Chine</p>
+        </div>
+        <div class="group cursor-pointer" onclick="window.openPackageModal?.('bresil')">
+            <div class="relative h-[450px] overflow-hidden rounded-3xl mb-6 shadow-sm group-hover:shadow-2xl transition-all duration-500">
+                <img src="https://images.unsplash.com/photo-1700677866571-43199bcbc593?q=80&w=1630" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white border border-white/50 px-6 py-2 rounded-full text-[10px] tracking-[0.3em] uppercase backdrop-blur-sm transition-all">Voir l'offre</span>
+                </div>
+                <div class="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-xl"><p class="text-xs font-black text-red-600">Dès 1.600$</p></div>
+            </div>
+            <h3 class="text-sm font-semibold uppercase tracking-widest">Rio & Copacabana</h3>
+            <p class="text-xs text-gray-400 mt-1">Énergie et plages infinies</p>
+        </div>
+        <div class="group cursor-pointer" onclick="window.openPackageModal?.('new york')">
+            <div class="relative h-[450px] overflow-hidden rounded-3xl mb-6 shadow-sm group-hover:shadow-2xl transition-all duration-500">
+                <img src="https://images.unsplash.com/photo-1500916434205-0c77489c6cf7?q=80&w=687" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                    <span class="opacity-0 group-hover:opacity-100 text-white border border-white/50 px-6 py-2 rounded-full text-[10px] tracking-[0.3em] uppercase backdrop-blur-sm transition-all">Voir l'offre</span>
+                </div>
+                <div class="absolute top-6 right-6 bg-white px-4 py-2 rounded-full shadow-xl"><p class="text-xs font-black text-red-600">Dès 1.950$</p></div>
+            </div>
+            <h3 class="text-sm font-semibold uppercase tracking-widest">New York City</h3>
+            <p class="text-xs text-gray-400 mt-1">Entre taxis jaunes et gratte-ciel</p>
+        </div>
+    </div>
+</section>
+
+<!-- MODAL PACKAGE -->
+<!-- MODAL PACKAGE AVEC CARROUSEL -->
+<div id="packageModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 md:p-10">
+    <div class="modal-overlay absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closePackageModal()"></div>
+    <div class="relative bg-white w-full max-w-6xl rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row animate-modal-in max-h-[90vh]">
+        
+        <!-- Section Image avec Carrousel -->
+        <div class="md:w-1/2 relative bg-gray-900">
+            <!-- Image principale -->
+            <div class="relative h-64 md:h-full min-h-[300px] overflow-hidden">
+                <img id="modalMainImage" src="" alt="Package image" 
+                     class="w-full h-full object-cover transition-opacity duration-300">
+                
+                <!-- Overlay gradient pour meilleure lisibilité des contrôles -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                
+                <!-- Boutons de navigation (flèches) -->
+                <button id="modal-prev-btn" 
+                        class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-all flex items-center justify-center text-white hover:scale-110">
+                    <i class="fas fa-chevron-left text-lg"></i>
+                </button>
+                <button id="modal-next-btn" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-all flex items-center justify-center text-white hover:scale-110">
+                    <i class="fas fa-chevron-right text-lg"></i>
+                </button>
+                
+                <!-- Dots indicators -->
+                <div id="modal-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                    <!-- Les dots sont générés dynamiquement par JavaScript -->
+                </div>
+                
+                <!-- Badge compteur -->
+                <div class="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs font-mono">
+                    <span id="modal-current-index">1</span>/<span id="modal-total-images">1</span>
+                </div>
+            </div>
+            
+            <!-- Bouton de fermeture (position absolue) -->
+            <button onclick="closePackageModal()" 
+                    class="absolute top-4 left-4 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-all z-20">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Section Contenu -->
+        <div class="md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto">
+            <div class="mb-6">
+                <div class="flex items-center gap-3 mb-3 flex-wrap">
+                    <p id="modalTag" class="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]"></p>
+                    <div id="modal-duration" class="text-[10px] text-gray-400 hidden"></div>
+                </div>
+                <h2 id="modalTitle" class="text-2xl md:text-3xl font-bold mb-3 text-gray-900"></h2>
+                
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="flex items-center gap-1">
+                        <i class="fas fa-star text-yellow-400 text-xs"></i>
+                        <i class="fas fa-star text-yellow-400 text-xs"></i>
+                        <i class="fas fa-star text-yellow-400 text-xs"></i>
+                        <i class="fas fa-star text-yellow-400 text-xs"></i>
+                        <i class="fas fa-star-half-alt text-yellow-400 text-xs"></i>
+                    </div>
+                    <span class="text-[10px] text-gray-400">(128 avis)</span>
+                </div>
+                
+                <p id="modalDesc" class="text-sm text-gray-600 leading-relaxed mb-6"></p>
+                
+                <div class="bg-gray-50 rounded-2xl p-5 mb-6">
+                    <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+                        <i class="fas fa-gift text-blue-500"></i> Inclus dans ce package
+                    </p>
+                    <ul id="modalFeatures" class="grid grid-cols-1 gap-2 text-sm">
+                        <!-- Features dynamiques -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-auto border-t border-gray-100 pt-6">
+                <div class="flex items-center justify-between gap-4 mb-4">
+                    <div>
+                        <p class="text-[9px] uppercase tracking-wider text-gray-400">Tarif package</p>
+                        <p id="modalPrice" class="text-3xl font-black text-blue-600"></p>
+                        <p class="text-[9px] text-gray-400 mt-1">par personne, hors vols internationaux</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] uppercase tracking-wider text-gray-400">Prochaine disponibilité</p>
+                        <p class="text-sm font-semibold text-gray-700">À partir du 15 mai 2026</p>
+                    </div>
+                </div>
+                
+                <p class="text-[10px] font-semibold uppercase tracking-wider mb-4 text-gray-500">
+                    <i class="fas fa-envelope mr-2"></i> Demander un devis personnalisé
+                </p>
+                <form id="package-quote-form" class="space-y-3">
+                    <div class="flex gap-3">
+                        <input type="text" placeholder="Votre nom" 
+                               class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none transition">
+                        <input type="email" placeholder="Votre email" 
+                               class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none transition">
+                    </div>
+                    <div class="flex gap-3">
+                        <input type="tel" placeholder="Téléphone (optionnel)" 
+                               class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none transition">
+                        <input type="number" placeholder="Nombre de voyageurs" 
+                               class="w-32 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-red-500 outline-none transition">
+                    </div>
+                    <button type="submit" 
+                            class="w-full py-4 bg-gradient-to-r from-red-600 to-red-700 text-white text-[11px] font-black uppercase tracking-wider rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg shadow-red-100">
+                        <i class="fas fa-paper-plane mr-2"></i> Obtenir mon devis personnalisé
+                    </button>
+                </form>
+                <p class="text-[9px] text-gray-400 text-center mt-3">
+                    <i class="fas fa-lock mr-1"></i> Vos informations sont sécurisées
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION PARTENAIRES -->
+<section id="partners" class="py-24 bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+        <p class="mono text-[10px] text-gray-400 font-bold tracking-[0.5em] mb-16 uppercase">Partenaires Mondiaux &amp; GDS</p>
+        <div class="swiper partnerSwiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Air_France_Logo.svg/250px-Air_France_Logo.svg.png" alt="Air France" class="h-10 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Emirates_logo.svg/250px-Emirates_logo.svg.png" alt="Emirates" class="h-14 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://cdn.worldvectorlogo.com/logos/qatar-airways-1.svg" alt="Qatar Airways" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://cdn.worldvectorlogo.com/logos/logo-ethiopian-airlines.svg" alt="Ethiopian Airlines" class="h-14 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://cdn.worldvectorlogo.com/logos/turkish-airlines-logo.svg" alt="Turkish Airlines" class="h-14 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://cdn.worldvectorlogo.com/logos/bookingcom-1.svg" alt="Booking.com" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://cdn.worldvectorlogo.com/logos/allianz-1.svg" alt="Allianz" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+                <div class="swiper-slide flex justify-center items-center px-8"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Brussels_Airlines.svg/1200px-Brussels_Airlines.svg.png" alt="Brussels Airlines" class="h-12 w-auto object-contain filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION CONTACT -->
+<section id="contact" class="py-32 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="bg-white rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row">
+            <div class="md:w-1/2 bg-black p-12 md:p-20 text-white flex flex-col justify-between">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.5em] text-red-500 mb-8">Contact Privilège</p>
+                    <h2 class="text-4xl font-light leading-tight mb-8">Prêt à <span class="italic font-black text-red-500">décoller</span> vers de nouveaux horizons ?</h2>
+                    <p class="text-gray-400 font-light leading-relaxed mb-12">Que ce soit pour une exploration culturelle ou une escapade sereine, notre équipe est là pour relier vos envies à la réalité.</p>
+                </div>
+                <div class="space-y-8 mb-16">
+                    <div class="flex items-center gap-6 group"><div class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-red-600 group-hover:border-red-600 transition-all"><i class="fab fa-whatsapp text-xl text-white"></i></div><div><p class="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Conciergerie 24/7</p><p class="text-sm font-bold tracking-wide">+243 854 442 103</p></div></div>
+                    <div class="flex items-center gap-6 group"><div class="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-red-600 group-hover:border-red-600 transition-all"><i class="far fa-envelope text-xl text-white"></i></div><div><p class="text-[9px] uppercase tracking-widest text-gray-500 mb-1">Email Officiel</p><p class="text-sm font-bold tracking-wide">hello@terravoyage.com</p></div></div>
+                </div>
+                <div class="pt-10 border-t border-white/10"><p class="text-[9px] uppercase tracking-[0.3em] text-gray-500 mb-6">Suivez l'aventure</p><div class="flex items-center gap-6"><a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-600 transition-all"><i class="fab fa-instagram text-sm"></i></a><a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-600 transition-all"><i class="fab fa-twitter text-sm"></i></a><a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-600 transition-all"><i class="fab fa-linkedin-in text-sm"></i></a><a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-600 transition-all"><i class="fab fa-facebook-f text-sm"></i></a><a href="#" class="w-10 h-10 flex items-center justify-center rounded-lg bg-white/5 hover:bg-red-600 transition-all"><i class="fab fa-youtube text-xl"></i></a></div></div>
+            </div>
+            <div class="md:w-1/2 p-12 md:p-20 bg-white">
+                <form action="#" class="space-y-8" id="contact-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="border-b border-gray-100 pb-2 focus-within:border-red-600 transition-all"><label class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Nom Complet</label><input type="text" placeholder="John Doe" class="w-full bg-transparent border-none p-0 mt-2 text-sm font-bold focus:ring-0 placeholder-gray-200"></div><div class="border-b border-gray-100 pb-2 focus-within:border-red-600 transition-all"><label class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Votre Email</label><input type="email" placeholder="john@terra.com" class="w-full bg-transparent border-none p-0 mt-2 text-sm font-bold focus:ring-0 placeholder-gray-200"></div></div>
+                    <div class="border-b border-gray-100 pb-2 focus-within:border-red-600 transition-all"><label class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Sujet de demande</label><select class="w-full bg-transparent border-none p-0 mt-2 text-sm font-bold focus:ring-0 appearance-none"><option>Réservation de Vol</option><option>Séjour de Luxe Personnalisé</option><option>Assistance GDS & Business</option><option>Autre demande</option></select></div>
+                    <div class="border-b border-gray-100 pb-2 focus-within:border-red-600 transition-all"><label class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Message</label><textarea rows="4" placeholder="Décrivez votre projet de voyage..." class="w-full bg-transparent border-none p-0 mt-2 text-sm font-bold focus:ring-0 placeholder-gray-200 resize-none"></textarea></div>
+                    <button type="submit" class="w-full py-5 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-black transition-all shadow-xl shadow-red-100">Envoyer ma demande</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-white border-t border-gray-100 pt-20 pb-10">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col items-center text-center">
+            <div class="mb-12"><h3 class="text-xl font-black tracking-tighter uppercase">Terra<span class="text-red-600">Voyage</span></h3><p class="text-[9px] text-gray-400 tracking-[0.3em] uppercase mt-2 font-bold">L'art de relier les mondes</p></div>
+            <div class="flex items-center gap-8 mb-8"><a href="#" class="text-gray-400 hover:text-black transition-colors"><i class="fab fa-x-twitter text-xl"></i></a><a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-linkedin-in text-xl"></i></a><a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-facebook-f text-xl"></i></a><a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-instagram text-xl"></i></a><a href="#" class="text-gray-400 hover:text-red-600 transition-colors"><i class="fab fa-youtube text-xl"></i></a></div>
+            <a href="https://www.terravoyage.com" class="text-xs font-black tracking-widest text-gray-900 hover:text-red-600 transition-all mb-16">WWW.TERRAVOYAGE.COM</a>
+            <div class="w-16 h-[1px] bg-red-100 mb-10"></div>
+            <div class="space-y-4"><p class="text-[10px] text-gray-400 font-medium max-w-md leading-relaxed italic">Terra Voyage, compagnie de management de voyage, est une marque de <span class="text-gray-900 font-bold not-italic">MAKEM GROUPE SARL</span>.</p><p class="text-[9px] text-gray-300 uppercase tracking-widest">&copy; 2026 Tous droits réservés.</p></div>
+        </div>
+    </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script type="module" src="./js/core/terra-engine.js"></script>
+
+<script>
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker enregistré !', reg.scope))
+        .catch(err => console.log('Échec de l\'enregistrement du SW', err));
+    });
+  }
+  
+  // Fallback pour les fonctions globales en attendant le chargement du module
+  window.TerraEngine = window.TerraEngine || {
+    changeMode: (m) => console.log('TerraEngine chargement...', m),
+    setTripType: (t) => console.log('TripType:', t),
+    updateQty: () => {},
+    setCabin: () => {},
+    togglePassengers: () => {},
+    performSearch: () => alert('Chargement de l\'application en cours...'),
+    openDatePicker: () => {},
+    addMultiCityRow: () => {}
+  };
+  
+  window.openPackageModal = window.openPackageModal || ((id) => {
+    console.log('Package modal loading...', id);
+    alert('Chargement des packages en cours...');
+  });
+  
+  window.closePackageModal = window.closePackageModal || (() => {
+    const modal = document.getElementById('packageModal');
+    if (modal) modal.classList.add('hidden');
+  });
+  
+  window.toggleMenu = window.toggleMenu || (() => {
+    const menu = document.getElementById('mobile-menu');
+    if (menu) menu.classList.toggle('translate-x-full');
+  });
+</script>
+</body>
+</html>

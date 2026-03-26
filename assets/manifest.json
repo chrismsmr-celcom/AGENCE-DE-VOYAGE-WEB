@@ -1,23 +1,21 @@
 {
-  "name": "Makmus Travel",
-  "short_name": "Makmus",
-  "description": "Réservez vos vols et hôtels au meilleur prix avec l'écosystème Makmus.",
-  "start_url": "/index.html",
+  "name": "Terra Voyage",
+  "short_name": "TerraVoyage",
+  "description": "Agence de voyage de luxe",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "assets/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
     },
     {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
+      "src": "assets/icon-32.png",
+      "sizes": "32x32",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#2563eb",
-  "background_color": "#ffffff",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }
