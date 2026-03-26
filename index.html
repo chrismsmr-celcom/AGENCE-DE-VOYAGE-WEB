@@ -298,7 +298,7 @@
             <p class="text-gray-600 max-w-xl mx-auto text-sm md:text-base leading-relaxed font-light">Accédez à l'excellence technologique du réseau Terra Voyage pour des itinéraires sur-mesure.</p>
         </div>
 
-<!-- BARRE DE RECHERCHE COMPACTE - VERSION ÉLÉGANTE -->
+<!-- BARRE DE RECHERCHE COMPACTE - VERSION ÉLÉGANTE AVEC MODAL ADAPTATIF -->
 <div class="max-w-5xl mx-auto px-4">
     <!-- Onglets de mode -->
     <div class="flex items-center gap-1 mb-2 ml-2 overflow-x-auto no-scrollbar">
@@ -320,7 +320,7 @@
     <!-- Conteneur principal -->
     <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
         
-        <!-- Options type de voyage -->
+        <!-- Options type de voyage (pour vols uniquement) -->
         <div id="flight-options" class="hidden px-4 pt-3 pb-1 border-b border-gray-100 bg-gray-50/50">
             <div class="flex items-center gap-2">
                 <button onclick="window.TerraEngine?.setTripType('round_trip')" 
@@ -343,7 +343,7 @@
             
             <!-- Section Lieux -->
             <div class="flex-1 flex flex-col sm:flex-row border-b lg:border-b-0 lg:border-r border-gray-100">
-                <!-- Origine -->
+                <!-- Origine (caché pour les séjours/voitures) -->
                 <div id="box-origin" class="hidden flex-1 relative group">
                     <div class="p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer">
                         <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
@@ -366,7 +366,7 @@
                             <span id="label-main">Destination</span>
                         </label>
                         <div class="relative">
-                            <input type="text" id="mainInput" placeholder="Paris (CDG)" 
+                            <input type="text" id="mainInput" placeholder="Paris" 
                                    class="search-input w-full bg-transparent border-none p-0 text-sm font-semibold focus:ring-0 uppercase placeholder-gray-300 outline-none">
                         </div>
                     </div>
@@ -380,7 +380,7 @@
                      onclick="window.TerraEngine?.openDatePicker('departure')">
                     <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
                         <i class="far fa-calendar-alt text-blue-500 text-[9px]"></i>
-                        <span>Départ</span>
+                        <span>Arrivée</span>
                     </label>
                     <div>
                         <span id="display-checkin" class="text-sm font-semibold text-gray-700">Choisir</span>
@@ -391,7 +391,7 @@
                      onclick="window.TerraEngine?.openDatePicker('return')">
                     <label class="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
                         <i class="far fa-calendar-alt text-gray-400 text-[9px]"></i>
-                        <span>Retour</span>
+                        <span>Départ</span>
                     </label>
                     <div>
                         <span id="display-checkout" class="text-sm font-semibold text-gray-700">Flexible</span>
@@ -401,7 +401,7 @@
                 <input type="text" id="date-picker-input" class="hidden">
             </div>
 
-            <!-- Section Passagers -->
+            <!-- Section Passagers (MODAL ADAPTATIF) -->
             <div class="relative border-b lg:border-b-0 lg:border-r border-gray-100">
                 <div class="p-3.5 hover:bg-gray-50/80 transition-all duration-200 cursor-pointer" 
                      onclick="window.TerraEngine?.togglePassengers(event)">
@@ -411,14 +411,15 @@
                     </label>
                     <div>
                         <span id="passenger-summary" class="text-sm font-semibold text-gray-700">1 Adulte</span>
-                        <p id="class-summary" class="text-[9px] text-gray-400 mt-0.5">Classe Économique</p>
+                        <p id="class-summary" class="text-[9px] text-gray-400 mt-0.5 hidden">Classe Économique</p>
+                        <p id="rooms-summary" class="text-[9px] text-gray-400 mt-0.5 hidden">1 Chambre</p>
                     </div>
                 </div>
 
-                <!-- Modal passagers -->
-                <div id="passenger-modal" class="passenger-dropdown hidden absolute top-full right-0 mt-2 w-80 bg-white shadow-2xl rounded-2xl border border-gray-100 z-50 overflow-hidden" onclick="event.stopPropagation()">
+                <!-- Modal passagers adaptatif (vols / hôtels) -->
+                <div id="passenger-modal" class="passenger-dropdown hidden absolute top-full right-0 mt-2 w-96 bg-white shadow-2xl rounded-2xl border border-gray-100 z-50 overflow-hidden" onclick="event.stopPropagation()">
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3.5">
-                        <h4 class="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                        <h4 id="modal-title" class="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                             <i class="fas fa-users"></i> Configuration du voyage
                         </h4>
                     </div>
@@ -427,7 +428,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-gray-800">Adultes</p>
-                                <p class="text-[9px] text-gray-400">12 ans et plus</p>
+                                <p class="text-[9px] text-gray-400">+12 ans</p>
                             </div>
                             <div class="flex items-center gap-4">
                                 <button type="button" onclick="window.TerraEngine?.updateQty('adult', -1, event)" 
@@ -463,7 +464,7 @@
                         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                             <div>
                                 <p class="text-sm font-semibold text-gray-800">Bébés</p>
-                                <p class="text-[9px] text-gray-400">Moins de 2 ans (sans siège)</p>
+                                <p class="text-[9px] text-gray-400">->2 ans</p>
                             </div>
                             <div class="flex items-center gap-4">
                                 <button type="button" onclick="window.TerraEngine?.updateQty('infant', -1, event)" 
@@ -477,8 +478,9 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- Classes -->
-                        <div>
+                        
+                        <!-- SECTION VOLS (classe) -->
+                        <div id="flight-section" class="transition-all duration-300">
                             <p class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">Classe de voyage</p>
                             <div class="grid grid-cols-4 gap-1.5">
                                 <button type="button" onclick="window.TerraEngine?.setCabin('economy')" 
@@ -503,6 +505,29 @@
                                 </button>
                             </div>
                         </div>
+                        
+                        <!-- SECTION HÔTELS (chambres) -->
+                        <div id="hotel-section" class="transition-all duration-300 hidden">
+                            <p class="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">Chambres</p>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800">Nombre de chambres</p>
+                                    <p class="text-[9px] text-gray-400">Pour votre séjour</p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <button type="button" onclick="window.TerraEngine?.updateRooms(-1, event)" 
+                                            class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                        <i class="fas fa-minus text-xs"></i>
+                                    </button>
+                                    <span id="qty-rooms" class="text-base font-bold w-6 text-center">1</span>
+                                    <button type="button" onclick="window.TerraEngine?.updateRooms(1, event)" 
+                                            class="counter-btn w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <button type="button" onclick="window.TerraEngine?.togglePassengers(event)" 
                                 class="w-full py-2.5 bg-blue-600 text-white text-[10px] font-bold uppercase rounded-xl hover:bg-blue-700 transition-all shadow-md mt-1">
                             <i class="fas fa-check-circle mr-1.5"></i> Confirmer
@@ -511,7 +536,7 @@
                 </div>
             </div>
 
-            <!-- Bouton Rechercher (corrigé avec group) -->
+            <!-- Bouton Rechercher -->
             <button onclick="window.TerraEngine?.performSearch()" 
                     class="search-btn group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-7 py-3.5 text-[11px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 min-w-[110px]">
                 <i class="fas fa-search text-white text-xs"></i>
@@ -810,43 +835,5 @@
 
 <!-- SCRIPTS -->
 <script type="module" src="./js/core/terra-engine.js"></script>
-
-<script>
-  // Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker enregistré !', reg.scope))
-        .catch(err => console.log('Échec de l\'enregistrement du SW', err));
-    });
-  }
-  
-  // Fallback pour les fonctions globales en attendant le chargement du module
-  window.TerraEngine = window.TerraEngine || {
-    changeMode: (m) => console.log('TerraEngine chargement...', m),
-    setTripType: (t) => console.log('TripType:', t),
-    updateQty: () => {},
-    setCabin: () => {},
-    togglePassengers: () => {},
-    performSearch: () => alert('Chargement de l\'application en cours...'),
-    openDatePicker: () => {},
-    addMultiCityRow: () => {}
-  };
-  
-  window.openPackageModal = window.openPackageModal || ((id) => {
-    console.log('Package modal loading...', id);
-    alert('Chargement des packages en cours...');
-  });
-  
-  window.closePackageModal = window.closePackageModal || (() => {
-    const modal = document.getElementById('packageModal');
-    if (modal) modal.classList.add('hidden');
-  });
-  
-  window.toggleMenu = window.toggleMenu || (() => {
-    const menu = document.getElementById('mobile-menu');
-    if (menu) menu.classList.toggle('translate-x-full');
-  });
-</script>
 </body>
 </html>
