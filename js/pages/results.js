@@ -37,47 +37,49 @@ let currentFilters = {
 // ============================================
 
 function getAirlineLogo(iataCode) {
-    const code = (iataCode || 'AIR').toUpperCase();
-    return `${API_BASE_URL}/airline-logo/${code}`;
+    var code = (iataCode || 'AIR').toUpperCase();
+    return API_BASE_URL + '/airline-logo/' + code;
 }
 
 function getAirlineName(offer) {
-    // Chercher dans différentes structures
-    if (offer.owner?.name) return offer.owner.name;
-    if (offer.slices?.[0]?.segments?.[0]?.operating_carrier?.name) {
+    if (offer.owner && offer.owner.name) return offer.owner.name;
+    if (offer.slices && offer.slices[0] && offer.slices[0].segments && offer.slices[0].segments[0] && offer.slices[0].segments[0].operating_carrier && offer.slices[0].segments[0].operating_carrier.name) {
         return offer.slices[0].segments[0].operating_carrier.name;
     }
-    if (offer.slices?.[0]?.segments?.[0]?.marketing_carrier?.name) {
+    if (offer.slices && offer.slices[0] && offer.slices[0].segments && offer.slices[0].segments[0] && offer.slices[0].segments[0].marketing_carrier && offer.slices[0].segments[0].marketing_carrier.name) {
         return offer.slices[0].segments[0].marketing_carrier.name;
     }
     return 'Compagnie aérienne';
 }
 
 function getAirlineIATA(offer) {
-    if (offer.owner?.iata_code) return offer.owner.iata_code;
-    if (offer.slices?.[0]?.segments?.[0]?.operating_carrier?.iata_code) {
+    if (offer.owner && offer.owner.iata_code) return offer.owner.iata_code;
+    if (offer.slices && offer.slices[0] && offer.slices[0].segments && offer.slices[0].segments[0] && offer.slices[0].segments[0].operating_carrier && offer.slices[0].segments[0].operating_carrier.iata_code) {
         return offer.slices[0].segments[0].operating_carrier.iata_code;
     }
-    if (offer.slices?.[0]?.segments?.[0]?.marketing_carrier?.iata_code) {
+    if (offer.slices && offer.slices[0] && offer.slices[0].segments && offer.slices[0].segments[0] && offer.slices[0].segments[0].marketing_carrier && offer.slices[0].segments[0].marketing_carrier.iata_code) {
         return offer.slices[0].segments[0].marketing_carrier.iata_code;
     }
     return null;
 }
 
 function getStops(offer) {
-    return (offer.slices?.[0]?.segments?.length || 1) - 1;
+    var segments = (offer.slices && offer.slices[0] && offer.slices[0].segments) ? offer.slices[0].segments : [];
+    return (segments.length || 1) - 1;
 }
 
 function getFlightDuration(offer) {
-    const firstSegment = offer.slices?.[0]?.segments?.[0];
+    var firstSegment = null;
+    if (offer.slices && offer.slices[0] && offer.slices[0].segments && offer.slices[0].segments[0]) {
+        firstSegment = offer.slices[0].segments[0];
+    }
     if (!firstSegment) return null;
-    const duration = firstSegment.duration;
+    var duration = firstSegment.duration;
     if (duration && typeof duration === 'number' && !isNaN(duration) && duration > 0) {
         return duration;
     }
-    // Essayer de parser la durée au format PT8H38M
     if (firstSegment.duration_pt) {
-        const match = firstSegment.duration_pt.match(/PT(\d+)H(\d+)M/);
+        var match = firstSegment.duration_pt.match(/PT(\d+)H(\d+)M/);
         if (match) {
             return parseInt(match[1]) * 60 + parseInt(match[2]);
         }
@@ -86,8 +88,11 @@ function getFlightDuration(offer) {
 }
 
 function getDepartureHour(offer) {
-    const firstSegment = offer.slices?.[0]?.segments?.[0];
-    if (!firstSegment?.departing_at) return null;
+    var firstSegment = null;
+    if (offer.slices && offer.slices[0] && offer.slices[0].segments && offer.slices[0].segments[0]) {
+        firstSegment = offer.slices[0].segments[0];
+    }
+    if (!firstSegment || !firstSegment.departing_at) return null;
     return new Date(firstSegment.departing_at).getHours();
 }
 
@@ -104,7 +109,7 @@ function getTimeOfDayCategory(hour) {
 
 function applyFilters(offers) {
     if (!offers || offers.length === 0) return [];
-    
+    var self = this;
     return offers.filter(function(offer) {
         var price = offer.total_amount || offer.intended_total_amount || offer.totalAmount || offer.price || 0;
         if (price > currentFilters.maxPrice) return false;
@@ -116,17 +121,20 @@ function applyFilters(offers) {
         var airlineCode = getAirlineIATA(offer);
         var airlineName = getAirlineName(offer);
         if (currentFilters.selectedAirlines.length > 0) {
-            var matches = currentFilters.selectedAirlines.some(function(selected) {
-                return selected === airlineCode || selected === airlineName;
-            });
+            var matches = false;
+            for (var i = 0; i < currentFilters.selectedAirlines.length; i++) {
+                var selected = currentFilters.selectedAirlines[i];
+                if (selected === airlineCode || selected === airlineName) {
+                    matches = true;
+                    break;
+                }
+            }
             if (!matches) return false;
         }
         
         var hour = getDepartureHour(offer);
         var timeCategory = getTimeOfDayCategory(hour);
-        var hasTimeFilter = currentFilters.timeOfDay.morning || 
-                           currentFilters.timeOfDay.afternoon || 
-                           currentFilters.timeOfDay.evening;
+        var hasTimeFilter = currentFilters.timeOfDay.morning || currentFilters.timeOfDay.afternoon || currentFilters.timeOfDay.evening;
         
         if (hasTimeFilter && timeCategory) {
             if (currentFilters.timeOfDay.morning && timeCategory === 'morning') return true;
@@ -141,23 +149,26 @@ function applyFilters(offers) {
 
 function sortOffers(offers, sortType) {
     if (!offers || offers.length === 0) return [];
-    var sorted = [...offers];
+    var sorted = offers.slice();
     switch(sortType) {
         case 'price_asc':
-            return sorted.sort(function(a, b) {
+            sorted.sort(function(a, b) {
                 var pa = a.total_amount || a.intended_total_amount || a.price || 0;
                 var pb = b.total_amount || b.intended_total_amount || b.price || 0;
                 return pa - pb;
             });
+            break;
         case 'price_desc':
-            return sorted.sort(function(a, b) {
+            sorted.sort(function(a, b) {
                 var pa = a.total_amount || a.intended_total_amount || a.price || 0;
                 var pb = b.total_amount || b.intended_total_amount || b.price || 0;
                 return pb - pa;
             });
+            break;
         default:
-            return sorted;
+            break;
     }
+    return sorted;
 }
 
 function applyHotelFilters(hotels) {
@@ -171,23 +182,26 @@ function applyHotelFilters(hotels) {
 
 function sortHotels(hotels, sortType) {
     if (!hotels || hotels.length === 0) return [];
-    var sorted = [...hotels];
+    var sorted = hotels.slice();
     switch(sortType) {
         case 'price_asc':
-            return sorted.sort(function(a, b) {
+            sorted.sort(function(a, b) {
                 var pa = a.price_per_night || a.price || a.totalPrice || 0;
                 var pb = b.price_per_night || b.price || b.totalPrice || 0;
                 return pa - pb;
             });
+            break;
         case 'price_desc':
-            return sorted.sort(function(a, b) {
+            sorted.sort(function(a, b) {
                 var pa = a.price_per_night || a.price || a.totalPrice || 0;
                 var pb = b.price_per_night || b.price || b.totalPrice || 0;
                 return pb - pa;
             });
+            break;
         default:
-            return sorted;
+            break;
     }
+    return sorted;
 }
 
 // ============================================
@@ -204,7 +218,9 @@ function updateResultsDisplay() {
     
     if (currentSearchType === 'flight') {
         var filtered = applyFilters(currentResults);
-        sorted = sortOffers(filtered, document.getElementById('sort-select')?.value || 'price_asc');
+        var sortSelect = document.getElementById('sort-select');
+        var sortValue = sortSelect ? sortSelect.value : 'price_asc';
+        sorted = sortOffers(filtered, sortValue);
         
         if (sorted.length === 0) {
             if (emptyState) emptyState.classList.remove('hidden');
@@ -219,7 +235,9 @@ function updateResultsDisplay() {
         
     } else if (currentSearchType === 'hotel') {
         var filteredHotels = applyHotelFilters(currentResults);
-        sorted = sortHotels(filteredHotels, document.getElementById('sort-select')?.value || 'price_asc');
+        var sortSelect = document.getElementById('sort-select');
+        var sortValue = sortSelect ? sortSelect.value : 'price_asc';
+        sorted = sortHotels(filteredHotels, sortValue);
         
         if (sorted.length === 0) {
             if (emptyState) emptyState.classList.remove('hidden');
@@ -243,11 +261,12 @@ function updateRecommendation(offers) {
     if (!banner || !text || !offers || offers.length === 0) return;
     
     if (currentSearchType === 'flight') {
-        var bestOffer = offers.reduce(function(prev, curr) {
-            var p1 = prev.total_amount || prev.intended_total_amount || prev.price || 0;
-            var p2 = curr.total_amount || curr.intended_total_amount || curr.price || 0;
-            return p1 < p2 ? prev : curr;
-        });
+        var bestOffer = offers[0];
+        for (var i = 1; i < offers.length; i++) {
+            var p1 = bestOffer.total_amount || bestOffer.intended_total_amount || bestOffer.price || 0;
+            var p2 = offers[i].total_amount || offers[i].intended_total_amount || offers[i].price || 0;
+            if (p2 < p1) bestOffer = offers[i];
+        }
         
         var price = bestOffer.total_amount || bestOffer.intended_total_amount || bestOffer.price || 0;
         var airlineName = getAirlineName(bestOffer);
@@ -307,7 +326,9 @@ function initFilters() {
             if (filterOneStop) filterOneStop.checked = false;
             
             var checkboxes = document.querySelectorAll('.airline-checkbox');
-            for (var i = 0; i < checkboxes.length; i++) checkboxes[i].checked = false;
+            for (var i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i]) checkboxes[i].checked = false;
+            }
             updateResultsDisplay();
         });
     }
@@ -381,42 +402,80 @@ function formatDurationPT(durationStr) {
     return null;
 }
 
+// Fonctions de navigation vers la page de détails
+function viewFlightDetails(offerId) {
+    var offer = null;
+    for (var i = 0; i < currentResults.length; i++) {
+        if (currentResults[i].id === offerId) {
+            offer = currentResults[i];
+            break;
+        }
+    }
+    if (offer) {
+        sessionStorage.setItem('selected_offer', JSON.stringify(offer));
+        sessionStorage.setItem('selected_offer_type', 'flight');
+        window.location.href = './details.html';
+    } else {
+        console.error('Offre non trouvée:', offerId);
+    }
+}
+
+function viewHotelDetails(hotelId) {
+    var hotel = null;
+    for (var i = 0; i < currentResults.length; i++) {
+        if (currentResults[i].id === hotelId) {
+            hotel = currentResults[i];
+            break;
+        }
+    }
+    if (hotel) {
+        sessionStorage.setItem('selected_offer', JSON.stringify(hotel));
+        sessionStorage.setItem('selected_offer_type', 'hotel');
+        window.location.href = './details.html';
+    } else {
+        console.error('Hôtel non trouvé:', hotelId);
+    }
+}
+
 function renderFlights(offers) {
     if (!offers || offers.length === 0) return '<div class="text-center py-10 text-gray-500">Aucun vol trouvé</div>';
     
-    return offers.map(function(offer, index) {
+    var html = '';
+    for (var idx = 0; idx < offers.length; idx++) {
+        var offer = offers[idx];
         var airlineCode = getAirlineIATA(offer);
         var airlineName = getAirlineName(offer);
         var logoUrl = getAirlineLogo(airlineCode);
         var totalAmount = offer.total_amount || offer.intended_total_amount || offer.price || 0;
         var currency = offer.total_currency || offer.currency || 'EUR';
         
-        var firstSlice = offer.slices?.[0];
-        var firstSegment = firstSlice?.segments?.[0];
+        var firstSlice = (offer.slices && offer.slices[0]) ? offer.slices[0] : null;
+        var firstSegment = (firstSlice && firstSlice.segments && firstSlice.segments[0]) ? firstSlice.segments[0] : null;
         
-        var originCode = firstSegment?.origin?.iata_code || '---';
-        var destCode = firstSegment?.destination?.iata_code || '---';
-        var originCity = firstSegment?.origin?.city_name || 'Départ';
-        var destCity = firstSegment?.destination?.city_name || 'Arrivée';
-        var departureTime = formatFlightTime(firstSegment?.departing_at);
-        var arrivalTime = formatFlightTime(firstSegment?.arriving_at);
+        var originCode = (firstSegment && firstSegment.origin && firstSegment.origin.iata_code) ? firstSegment.origin.iata_code : '---';
+        var destCode = (firstSegment && firstSegment.destination && firstSegment.destination.iata_code) ? firstSegment.destination.iata_code : '---';
+        var originCity = (firstSegment && firstSegment.origin && firstSegment.origin.city_name) ? firstSegment.origin.city_name : 'Départ';
+        var destCity = (firstSegment && firstSegment.destination && firstSegment.destination.city_name) ? firstSegment.destination.city_name : 'Arrivée';
+        var departureTime = formatFlightTime(firstSegment ? firstSegment.departing_at : null);
+        var arrivalTime = formatFlightTime(firstSegment ? firstSegment.arriving_at : null);
         
         var duration = null;
-        if (firstSegment?.duration) {
+        if (firstSegment && firstSegment.duration) {
             var mins = firstSegment.duration;
             var hours = Math.floor(mins / 60);
             var minutes = mins % 60;
             duration = hours + 'h' + (minutes > 0 ? minutes : '');
-        } else if (firstSlice?.duration) {
+        } else if (firstSlice && firstSlice.duration) {
             duration = formatDurationPT(firstSlice.duration);
         }
         
-        var stops = (firstSlice?.segments?.length || 1) - 1;
+        var segmentsCount = (firstSlice && firstSlice.segments) ? firstSlice.segments.length : 1;
+        var stops = segmentsCount - 1;
         var stopsText = stops === 0 ? 'Direct' : stops + ' escale' + (stops > 1 ? 's' : '');
         var stopsClass = stops === 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
         
-        return `
-            <div class="result-card p-6" style="animation-delay: ${index * 0.03}s">
+        html += `
+            <div class="result-card p-6" style="animation-delay: ${idx * 0.03}s">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                     <div class="flex items-center gap-5 flex-1">
                         <img src="${logoUrl}" alt="${airlineName}" class="w-16 h-12 object-contain" 
@@ -447,22 +506,25 @@ function renderFlights(offers) {
                     
                     <div class="text-right min-w-[130px]">
                         <p class="text-2xl font-bold text-blue-600">${formatPrice(totalAmount, currency)}</p>
-                        <button onclick="bookFlight('${offer.id}')" class="btn-premium w-full mt-3 px-4 py-2 text-[10px]">
-                            <i class="fas fa-ticket-alt mr-1"></i> Réserver
+                        <button onclick="viewFlightDetails('${offer.id}')" class="btn-premium w-full mt-3 px-4 py-2 text-[10px]">
+                            <i class="fas fa-info-circle mr-1"></i> Voir détails
                         </button>
                     </div>
                 </div>
             </div>
         `;
-    }).join('');
+    }
+    return html;
 }
 
 function renderHotels(hotels) {
     if (!hotels || hotels.length === 0) return '<div class="text-center py-10 text-gray-500">Aucun hôtel trouvé</div>';
     
-    return hotels.map(function(hotel, index) {
+    var html = '';
+    for (var idx = 0; idx < hotels.length; idx++) {
+        var hotel = hotels[idx];
         var price = hotel.price_per_night || hotel.price || hotel.totalPrice || 150;
-        var photo = hotel.main_photo || hotel.images?.[0] || DEFAULT_HOTEL_IMAGE;
+        var photo = hotel.main_photo || (hotel.images && hotel.images[0]) || DEFAULT_HOTEL_IMAGE;
         var rating = hotel.rating || 4;
         var name = hotel.name || 'Hôtel de Luxe';
         var address = hotel.address || hotel.city || 'Localisation premium';
@@ -472,8 +534,8 @@ function renderHotels(hotels) {
         for (var i = 0; i < fullStars; i++) stars += '<i class="fas fa-star text-yellow-400 text-sm"></i>';
         for (var i = fullStars; i < 5; i++) stars += '<i class="far fa-star text-gray-300 text-sm"></i>';
         
-        return `
-            <div class="result-card overflow-hidden" style="animation-delay: ${index * 0.05}s">
+        html += `
+            <div class="result-card overflow-hidden" style="animation-delay: ${idx * 0.05}s">
                 <div class="flex flex-col md:flex-row">
                     <img src="${photo}" class="w-full md:w-64 h-48 object-cover" 
                          onerror="this.src='${DEFAULT_HOTEL_IMAGE}'">
@@ -492,15 +554,16 @@ function renderHotels(hotels) {
                                 <span class="text-2xl font-bold text-blue-600">${formatPrice(price)}</span>
                                 <span class="text-gray-500">/nuit</span>
                             </div>
-                            <button onclick="bookHotel('${hotel.id}')" class="btn-premium px-6 py-2 text-xs">
-                                <i class="fas fa-bed mr-1"></i> Voir l'offre
+                            <button onclick="viewHotelDetails('${hotel.id}')" class="btn-premium px-6 py-2 text-xs">
+                                <i class="fas fa-info-circle mr-1"></i> Voir l'offre
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
-    }).join('');
+    }
+    return html;
 }
 
 // ============================================
@@ -529,14 +592,12 @@ async function init() {
     
     currentSearchType = searchType;
     
-    // ⭐ CORRECTION : Extraire les vols correctement
     var results = [];
     
     console.log('🔍 Données reçues:', data);
     console.log('🔍 Type de recherche:', searchType);
     
     if (searchType === 'flight') {
-        // Structure de l'API : { success: true, source: "duffel_multi", flights: [...] }
         if (data && data.flights && Array.isArray(data.flights)) {
             results = data.flights;
         } else if (data && data.data && data.data.flights && Array.isArray(data.data.flights)) {
@@ -576,11 +637,12 @@ async function init() {
         updateResultsDisplay();
         updateRecommendation(results);
         
-        // Cacher les filtres spécifiques aux vols
         var flightFilters = document.querySelectorAll('#filter-direct, #filter-one-stop');
-        flightFilters.forEach(function(el) {
-            if (el && el.parentElement) el.parentElement.style.display = 'none';
-        });
+        for (var i = 0; i < flightFilters.length; i++) {
+            if (flightFilters[i] && flightFilters[i].parentElement) {
+                flightFilters[i].parentElement.style.display = 'none';
+            }
+        }
     }
 }
 
@@ -588,10 +650,11 @@ async function init() {
 // EXPOSITION GLOBALE
 // ============================================
 
+window.viewFlightDetails = viewFlightDetails;
+window.viewHotelDetails = viewHotelDetails;
 window.bookFlight = function(id) {
     alert('✨ Réservation du vol en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
 };
-
 window.bookHotel = function(id) {
     alert('✨ Réservation de l\'hôtel en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
 };
