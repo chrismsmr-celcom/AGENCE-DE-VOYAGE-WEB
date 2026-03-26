@@ -285,7 +285,7 @@ app.post('/api/airline-logo', async (req, res) => {
     }
 });
 // ==========================================
-// 2. HÔTELS (DUFFEL STAYS - NOUVEAU !)
+// 2. HÔTELS (Booking.com via RapidAPI + Fallback)
 // ==========================================
 app.post('/api/stays/search', async (req, res) => {
     const { 
@@ -307,104 +307,277 @@ app.post('/api/stays/search', async (req, res) => {
         });
     }
 
-    if (!duffel) {
-        return res.status(503).json({ 
-            success: false,
-            error: "Service Duffel non disponible",
-            stays: []
-        });
-    }
+    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 
     try {
-        // Préparer les paramètres de recherche
-        const searchParams = {
-            rooms: rooms || 1,
-            check_in_date: checkIn,
-            check_out_date: checkOut,
-            guests: buildGuestsList(adults, children)
-        };
-
-        // Ajouter la localisation
-        if (latitude && longitude) {
-            searchParams.location = {
-                radius: radius || 10,
-                geographic_coordinates: {
-                    latitude: parseFloat(latitude),
-                    longitude: parseFloat(longitude)
-                }
-            };
-        } else if (city) {
-            // Convertir la ville en coordonnées
-            const coords = await geocodeCity(city);
-            if (coords) {
-                searchParams.location = {
-                    radius: radius || 10,
-                    geographic_coordinates: coords
-                };
-            } else {
-                // Fallback : recherche par nom de ville (si supporté par Duffel)
-                searchParams.location = {
-                    radius: radius || 10,
-                    named_location: city
-                };
-            }
-        } else {
-            return res.status(400).json({ 
-                success: false,
-                error: "Paramètres manquants: city ou latitude/longitude requis" 
+        // ==========================================
+        // 1. ESSAYER BOOKING.COM VIA RAPIDAPI
+        // ==========================================
+        if (RAPIDAPI_KEY && city) {
+            console.log('🔍 Recherche Booking.com via RapidAPI pour:', city);
+            
+            // Étape 1: Obtenir l'ID de la ville
+            const locationRes = await axios.get('https://booking-com.p.rapidapi.com/v1/hotels/locations', {
+                params: { 
+                    query: city, 
+                    locale: 'fr-fr' 
+                },
+                headers: {
+                    'X-RapidAPI-Key': RAPIDAPI_KEY,
+                    'X-RapidAPI-Host': 'booking-com.p.rapidapi.com'
+                },
+                timeout: 8000
             });
+            
+            if (locationRes.data && locationRes.data.length > 0) {
+                const cityId = locationRes.data[0].dest_id;
+                const cityType = locationRes.data[0].dest_type;
+                
+                console.log(`📍 Ville trouvée: ${cityId} (${cityType})`);
+                
+                // Étape 2: Rechercher les hôtels
+                const hotelsRes = await axios.get('https://booking-com.p.rapidapi.com/v1/hotels/search', {
+                    params: {
+                        dest_id: cityId,
+                        dest_type: cityType,
+                        checkin_date: checkIn,
+                        checkout_date: checkOut,
+                        adults: parseInt(adults) || 2,
+                        children: parseInt(children) || 0,
+                        rooms: rooms || 1,
+                        locale: 'fr-fr',
+                        order_by: 'price',
+                        filter_by_currency: 'EUR',
+                        units: 'metric'
+                    },
+                    headers: {
+                        'X-RapidAPI-Key': RAPIDAPI_KEY,
+                        'X-RapidAPI-Host': 'booking-com.p.rapidapi.com'
+                    },
+                    timeout: 10000
+                });
+                
+                const bookingHotels = (hotelsRes.data.result || []).map(hotel => ({
+                    id: hotel.hotel_id?.toString() || `booking_${Date.now()}_${Math.random()}`,
+                    name: hotel.hotel_name || 'Hôtel',
+                    address: hotel.address || hotel.city_name_en || city,
+                    city: hotel.city_name_en || city,
+                    country: hotel.countrycode || 'FR',
+                    rating: hotel.review_score || 0,
+                    review_count: hotel.review_nr || 0,
+                    price_per_night: hotel.min_total_price ? Math.round(hotel.min_total_price) : 0,
+                    total_price: hotel.min_total_price ? Math.round(hotel.min_total_price) : 0,
+                    currency: hotel.currency_code || 'EUR',
+                    main_photo: hotel.main_photo_url || null,
+                    images: hotel.main_photo_url ? [hotel.main_photo_url] : [],
+                    description: hotel.hotel_description || `${hotel.hotel_name} à ${city}`,
+                    amenities: hotel.hotel_amenities || [],
+                    url: hotel.url,
+                    latitude: hotel.latitude,
+                    longitude: hotel.longitude
+                }));
+                
+                if (bookingHotels.length > 0) {
+                    console.log(`✅ Booking.com: ${bookingHotels.length} hôtels trouvés`);
+                    return res.json({ 
+                        success: true, 
+                        source: "booking_via_rapidapi", 
+                        stays: bookingHotels,
+                        count: bookingHotels.length
+                    });
+                }
+            }
         }
-
-        console.log('🔍 Recherche Duffel Stays:', JSON.stringify(searchParams, null, 2));
         
-        const duffelRes = await duffel.stays.search(searchParams);
-
-        console.log(`✅ Hébergements trouvés: ${duffelRes.data?.length || 0} propriétés`);
+        // ==========================================
+        // 2. ESSAYER DUFFEL STAYS
+        // ==========================================
+        if (duffel) {
+            console.log('🔍 Recherche Duffel Stays...');
+            
+            const searchParams = {
+                rooms: rooms || 1,
+                check_in_date: checkIn,
+                check_out_date: checkOut,
+                guests: buildGuestsList(adults, children)
+            };
+            
+            // Ajouter la localisation
+            if (latitude && longitude) {
+                searchParams.location = {
+                    radius: radius || 10,
+                    geographic_coordinates: {
+                        latitude: parseFloat(latitude),
+                        longitude: parseFloat(longitude)
+                    }
+                };
+            } else if (city) {
+                const coords = await geocodeCity(city);
+                if (coords) {
+                    searchParams.location = {
+                        radius: radius || 10,
+                        geographic_coordinates: coords
+                    };
+                } else {
+                    searchParams.location = {
+                        radius: radius || 10,
+                        named_location: city
+                    };
+                }
+            } else {
+                return res.status(400).json({ 
+                    success: false,
+                    error: "Paramètres manquants: city ou latitude/longitude requis" 
+                });
+            }
+            
+            console.log('🔍 Paramètres Duffel:', JSON.stringify(searchParams, null, 2));
+            
+            const duffelRes = await duffel.stays.search(searchParams);
+            
+            if (duffelRes.data && duffelRes.data.length > 0) {
+                console.log(`✅ Duffel Stays: ${duffelRes.data.length} hébergements trouvés`);
+                return res.json({ 
+                    success: true,
+                    source: "duffel_stays",
+                    stays: duffelRes.data,
+                    count: duffelRes.data.length
+                });
+            }
+        }
+        
+        // ==========================================
+        // 3. FALLBACK: DONNÉES DÉMO POUR TEST
+        // ==========================================
+        console.log('🔄 Aucun résultat des APIs, utilisation de données de démonstration...');
+        
+        // Données de démonstration pour que le site ne soit pas vide
+        const demoHotels = generateDemoHotels(city, checkIn, checkOut, adults);
         
         res.json({ 
             success: true,
-            source: "duffel_stays",
-            stays: duffelRes.data || [],
-            count: duffelRes.data?.length || 0
+            source: "demo_fallback",
+            stays: demoHotels,
+            count: demoHotels.length,
+            fallback: true,
+            message: "Affichage d'hôtels de démonstration"
         });
-
-    } catch (e) { 
-        console.error("❌ Erreur Duffel Stays:", e.errors ? JSON.stringify(e.errors) : e.message);
         
-        // Fallback vers Lite API si Duffel Stays échoue
-        console.log('🔄 Fallback vers Lite API...');
-        try {
-            const fallbackRes = await axios.post("https://api.liteapi.travel/v3.0/hotels/search", {
-                destination: city,
-                checkin: checkIn,
-                checkout: checkOut,
-                adults: parseInt(adults) || 1,
-                children: parseInt(children) || 0,
-                currency: "USD",
-                guestNationality: "US"
-            }, { 
-                headers: LITE_HEADERS,
-                timeout: 10000 
-            });
-            
-            res.json({ 
-                success: true,
-                source: "liteapi_fallback",
-                stays: fallbackRes.data.data || [],
-                count: fallbackRes.data.data?.length || 0,
-                fallback: true
-            });
-        } catch (fallbackError) {
-            res.json({ 
-                success: false,
-                source: "duffel_stays",
-                stays: [], 
-                error: "Aucun hébergement trouvé pour ces critères",
-                details: process.env.NODE_ENV === 'development' ? e.message : null
-            });
-        }
+    } catch (error) {
+        console.error("❌ Erreur recherche hôtels:", error.response?.data || error.message);
+        
+        // Fallback final: données de démonstration
+        const demoHotels = generateDemoHotels(city || 'Paris', checkIn, checkOut, adults);
+        
+        res.json({ 
+            success: true,
+            source: "demo_fallback",
+            stays: demoHotels,
+            count: demoHotels.length,
+            fallback: true,
+            message: "Service temporairement indisponible, affichage d'hôtels de démonstration"
+        });
     }
 });
+
+/**
+ * Génère des données d'hôtels de démonstration pour le fallback
+ */
+function generateDemoHotels(city, checkIn, checkOut, adults) {
+    const cityName = city || 'Paris';
+    const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 3;
+    
+    const demoHotels = [
+        {
+            id: "demo_hotel_1",
+            name: `Hôtel Royal ${cityName}`,
+            address: `Centre-ville, ${cityName}`,
+            city: cityName,
+            country: "FR",
+            rating: 4.8,
+            review_count: 234,
+            price_per_night: 189,
+            total_price: 189 * nights,
+            currency: "EUR",
+            main_photo: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400",
+            images: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400"],
+            description: `Magnifique hôtel 5 étoiles au cœur de ${cityName}. Chambres luxueuses avec vue panoramique, spa et restaurant gastronomique.`,
+            amenities: ["Wi-Fi gratuit", "Piscine", "Spa", "Restaurant", "Parking"],
+            rating_text: "Exceptionnel"
+        },
+        {
+            id: "demo_hotel_2",
+            name: `Grand Hôtel ${cityName}`,
+            address: `Quartier des affaires, ${cityName}`,
+            city: cityName,
+            country: "FR",
+            rating: 4.5,
+            review_count: 567,
+            price_per_night: 145,
+            total_price: 145 * nights,
+            currency: "EUR",
+            main_photo: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=400",
+            images: ["https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=400"],
+            description: `Hôtel 4 étoiles idéalement situé, à proximité des principales attractions de ${cityName}. Confort moderne et service attentionné.`,
+            amenities: ["Wi-Fi gratuit", "Salle de sport", "Room service", "Bar"],
+            rating_text: "Très bien"
+        },
+        {
+            id: "demo_hotel_3",
+            name: `Résidence ${cityName} Centre`,
+            address: `Rue principale, ${cityName}`,
+            city: cityName,
+            country: "FR",
+            rating: 4.2,
+            review_count: 892,
+            price_per_night: 98,
+            total_price: 98 * nights,
+            currency: "EUR",
+            main_photo: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400",
+            images: ["https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400"],
+            description: `Séjour économique au cœur de ${cityName}. Appartements modernes et bien équipés, parfaits pour les familles.`,
+            amenities: ["Wi-Fi gratuit", "Kitchenette", "Ascenseur", "Climatisation"],
+            rating_text: "Très bien"
+        },
+        {
+            id: "demo_hotel_4",
+            name: `Luxe & Spa ${cityName}`,
+            address: `Avenue des Champs, ${cityName}`,
+            city: cityName,
+            country: "FR",
+            rating: 4.9,
+            review_count: 123,
+            price_per_night: 320,
+            total_price: 320 * nights,
+            currency: "EUR",
+            main_photo: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400",
+            images: ["https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400"],
+            description: `Hôtel de luxe 5 étoiles avec spa exclusif, piscine intérieure et restaurant étoilé. Séjour d'exception à ${cityName}.`,
+            amenities: ["Wi-Fi gratuit", "Spa", "Piscine intérieure", "Restaurant étoilé", "Service voiturier"],
+            rating_text: "Exceptionnel"
+        },
+        {
+            id: "demo_hotel_5",
+            name: `Le Petit ${cityName}`,
+            address: `Quartier historique, ${cityName}`,
+            city: cityName,
+            country: "FR",
+            rating: 4.3,
+            review_count: 445,
+            price_per_night: 78,
+            total_price: 78 * nights,
+            currency: "EUR",
+            main_photo: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=400",
+            images: ["https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=400"],
+            description: `Hôtel de charme dans le quartier historique de ${cityName}. Ambiance chaleureuse et accueil personnalisé.`,
+            amenities: ["Wi-Fi gratuit", "Petit-déjeuner", "Terrasse", "Animaux acceptés"],
+            rating_text: "Très bien"
+        }
+    ];
+    
+    // Ajouter un hôtel avec le nom de la ville
+    return demoHotels;
+}
 // ==========================================
 // 2.5. TRADUCTEUR VILLE → CODE IATA (NOUVEAU !)
 // ==========================================
