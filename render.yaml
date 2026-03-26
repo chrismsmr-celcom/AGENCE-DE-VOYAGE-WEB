@@ -1,0 +1,67 @@
+# render.yaml - Configuration complète pour Render
+# Placez ce fichier à la racine de votre projet
+
+services:
+  # Service API Backend
+  - type: web
+    name: terra-voyage-api
+    runtime: node
+    plan: starter
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DUFFEL_TOKEN
+        sync: false  # À configurer manuellement dans le dashboard
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: LITE_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://terravoyage.com,https://www.terravoyage.com
+    domains:
+      - api.terravoyage.com
+    disk:
+      name: uploads
+      mountPath: /uploads
+      sizeGB: 1
+
+  # Service Frontend (si vous hébergez aussi le frontend sur Render)
+  - type: web
+    name: terra-voyage-frontend
+    runtime: static
+    buildCommand: echo "No build needed for static site"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=86400
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: API_URL
+        value: https://api.terravoyage.com
+    domains:
+      - terravoyage.com
+      - www.terravoyage.com
+
+  # Base de données PostgreSQL (optionnel, si vous voulez la gérer sur Render)
+  - type: postgresql
+    name: terra-voyage-db
+    plan: starter
+    ipAllowList: []
+    databaseName: terra_voyage
+    postgresMajorVersion: 15
