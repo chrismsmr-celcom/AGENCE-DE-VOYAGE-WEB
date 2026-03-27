@@ -17,16 +17,34 @@ services:
         value: production
       - key: PORT
         value: 10000
+      
+      # Amadeus API (principal)
+      - key: AMADEUS_API_KEY
+        sync: false
+      - key: AMADEUS_API_SECRET
+        sync: false
+      
+      # Duffel API (fallback pour vols)
       - key: DUFFEL_TOKEN
-        sync: false  # À configurer manuellement dans le dashboard
+        sync: false
+      
+      # Supabase (base de données)
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      
+      # Booking.com via RapidAPI (fallback hôtels)
+      - key: RAPIDAPI_KEY
+        sync: false
+      
+      # Lite API (fallback ancien - à conserver pour compatibilité)
       - key: LITE_API_KEY
         sync: false
+      
+      # CORS
       - key: ALLOWED_ORIGINS
-        value: https://terravoyage.com,https://www.terravoyage.com
+        value: https://terravoyage.com,https://www.terravoyage.com,http://localhost:3333
     domains:
       - api.terravoyage.com
     disk:
