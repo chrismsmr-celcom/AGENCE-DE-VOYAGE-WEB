@@ -1,7 +1,7 @@
 {
   "name": "terra-voyage-hub",
-  "version": "4.0.0",
-  "description": "API Hub Central pour Terra Voyage - Version Premium",
+  "version": "5.0.0",
+  "description": "API Hub Central pour Terra Voyage - Version Premium avec Amadeus",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,6 +10,7 @@
   "dependencies": {
     "@duffel/api": "^3.0.0",
     "@supabase/supabase-js": "^2.38.0",
+    "amadeus": "^9.1.0",
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.0",
@@ -18,7 +19,7 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-   "engines": {
+  "engines": {
     "node": "20.18.0"
   }
 }
