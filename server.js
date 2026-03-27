@@ -161,50 +161,71 @@ app.post('/api/flights/search', async (req, res) => {
         });
     }
 
-    // 1. ESSAYER AMADEUS
+    // === TRADUCTION DES VILLES EN CODES IATA ===
+    const originCodes = await getAirportCodes(origin);
+    const destCodes = await getAirportCodes(destination);
+    
+    console.log(`📍 Traduction: ${origin} → ${originCodes.join(', ')}`);
+    console.log(`📍 Traduction: ${destination} → ${destCodes.join(', ')}`);
+    
+    let allFlights = [];
+    
+    // 1. ESSAYER AMADEUS POUR CHAQUE COMBINAISON
     if (amadeus) {
-        try {
-            console.log('🔍 Recherche Amadeus Flights...');
-            
-            const amadeusParams = {
-                originLocationCode: origin.toUpperCase(),
-                destinationLocationCode: destination.toUpperCase(),
-                departureDate: departureDate,
-                adults: parseInt(adults) || 1,
-                max: 50
-            };
-            
-            if (tripType === 'round_trip' && returnDate) {
-                amadeusParams.returnDate = returnDate;
+        for (const originCode of originCodes) {
+            for (const destCode of destCodes) {
+                try {
+                    console.log(`🔍 Recherche Amadeus: ${originCode} → ${destCode}`);
+                    
+                    const amadeusParams = {
+                        originLocationCode: originCode,
+                        destinationLocationCode: destCode,
+                        departureDate: departureDate,
+                        adults: parseInt(adults) || 1,
+                        max: 50
+                    };
+                    
+                    if (tripType === 'round_trip' && returnDate) {
+                        amadeusParams.returnDate = returnDate;
+                    }
+                    
+                    if (travelClass) {
+                        const classMap = {
+                            economy: 'ECONOMY',
+                            premium_economy: 'PREMIUM_ECONOMY',
+                            business: 'BUSINESS',
+                            first: 'FIRST'
+                        };
+                        amadeusParams.travelClass = classMap[travelClass] || 'ECONOMY';
+                    }
+                    
+                    const amadeusResponse = await amadeus.shopping.flightOffersSearch.get(amadeusParams);
+                    
+                    if (amadeusResponse.data && amadeusResponse.data.length > 0) {
+                        console.log(`✅ Amadeus: ${amadeusResponse.data.length} vols trouvés pour ${originCode}→${destCode}`);
+                        allFlights.push(...amadeusResponse.data);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ Erreur Amadeus pour ${originCode}→${destCode}:`, error.message);
+                }
             }
-            
-            if (travelClass) {
-                const classMap = {
-                    economy: 'ECONOMY',
-                    premium_economy: 'PREMIUM_ECONOMY',
-                    business: 'BUSINESS',
-                    first: 'FIRST'
-                };
-                amadeusParams.travelClass = classMap[travelClass] || 'ECONOMY';
-            }
-            
-            const amadeusResponse = await amadeus.shopping.flightOffersSearch.get(amadeusParams);
-            
-            if (amadeusResponse.data && amadeusResponse.data.length > 0) {
-                console.log(`✅ Amadeus: ${amadeusResponse.data.length} vols trouvés`);
-                return res.json({ 
-                    success: true, 
-                    source: "amadeus",
-                    flights: amadeusResponse.data,
-                    count: amadeusResponse.data.length
-                });
-            }
-            
-            console.log('⚠️ Amadeus: aucun résultat');
-            
-        } catch (amadeusError) {
-            console.error('❌ Erreur Amadeus:', amadeusError.description || amadeusError.message);
         }
+    }
+    
+    // Si Amadeus a trouvé des résultats, les retourner
+    if (allFlights.length > 0) {
+        console.log(`✅ Total Amadeus: ${allFlights.length} vols trouvés`);
+        return res.json({ 
+            success: true, 
+            source: "amadeus",
+            flights: allFlights,
+            count: allFlights.length,
+            search_details: {
+                origin_codes: originCodes,
+                destination_codes: destCodes
+            }
+        });
     }
     
     // 2. FALLBACK VERS DUFFEL
@@ -212,16 +233,20 @@ app.post('/api/flights/search', async (req, res) => {
         try {
             console.log('🔄 Fallback vers Duffel Flights...');
             
+            // Duffel accepte les codes IATA, on prend le premier de chaque liste
+            const originCode = originCodes[0] || origin.toUpperCase();
+            const destCode = destCodes[0] || destination.toUpperCase();
+            
             const slices = [{ 
-                origin: origin.toUpperCase(), 
-                destination: destination.toUpperCase(), 
+                origin: originCode, 
+                destination: destCode, 
                 departure_date: departureDate 
             }];
             
             if (tripType === 'round_trip' && returnDate) {
                 slices.push({ 
-                    origin: destination.toUpperCase(), 
-                    destination: origin.toUpperCase(), 
+                    origin: destCode, 
+                    destination: originCode, 
                     departure_date: returnDate 
                 });
             }
@@ -263,7 +288,6 @@ app.post('/api/flights/search', async (req, res) => {
         error: "Aucun vol trouvé" 
     });
 });
-
 // ==========================================
 // 2. HÔTELS (Amadeus principal + fallback)
 // ==========================================
@@ -282,7 +306,9 @@ app.post('/api/hotels/search', async (req, res) => {
         try {
             console.log(`🔍 Recherche Amadeus Hotels pour: ${city}`);
             
+            // Chercher le code de la ville
             const cityCode = await getCityCode(city);
+            console.log(`📍 Code ville Amadeus: ${cityCode}`);
             
             const amadeusResponse = await amadeus.shopping.hotelOffers.get({
                 cityCode: cityCode,
@@ -320,7 +346,7 @@ app.post('/api/hotels/search', async (req, res) => {
         }
     }
     
-    // 2. FALLBACK VERS BOOKING.COM VIA RAPIDAPI
+    // 2. FALLBACK VERS BOOKING.COM
     const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
     if (RAPIDAPI_KEY) {
         try {
@@ -663,7 +689,61 @@ app.get('/api/locations/search', async (req, res) => {
     
     res.json(results);
 });
-
+// ==========================================
+// TRADUCTION VILLE → CODE IATA (via Supabase)
+// ==========================================
+async function getAirportCodes(cityName) {
+    if (!cityName) return [cityName];
+    
+    const normalizedCity = cityName.toLowerCase().trim();
+    
+    // Vérifier si c'est déjà un code IATA (3 lettres majuscules)
+    if (/^[A-Z]{3}$/.test(cityName.toUpperCase())) {
+        return [cityName.toUpperCase()];
+    }
+    
+    // Chercher dans Supabase
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('city_iata_mapping')
+                .select('iata_codes')
+                .ilike('city_name_normalized', `%${normalizedCity}%`)
+                .limit(1);
+            
+            if (!error && data && data.length > 0 && data[0].iata_codes) {
+                console.log(`📍 Traduction: ${cityName} → ${data[0].iata_codes.join(', ')}`);
+                return data[0].iata_codes;
+            }
+        } catch (e) {
+            console.error('Erreur recherche ville:', e);
+        }
+    }
+    
+    // Fallback: essayer de trouver un aéroport par le nom
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('air_destinations')
+                .select('iata_code')
+                .ilike('municipality', `%${normalizedCity}%`)
+                .ilike('type', 'airport')
+                .limit(3);
+            
+            if (!error && data && data.length > 0) {
+                const codes = data.map(d => d.iata_code).filter(c => c);
+                if (codes.length > 0) {
+                    console.log(`📍 Traduction (aéroport): ${cityName} → ${codes.join(', ')}`);
+                    return codes;
+                }
+            }
+        } catch (e) {
+            console.error('Erreur recherche aéroport:', e);
+        }
+    }
+    
+    return [cityName.toUpperCase()];
+}
 // ==========================================
 // 7. AIRLINE LOGOS (Supabase)
 // ==========================================
