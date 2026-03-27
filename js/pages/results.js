@@ -1,7 +1,7 @@
 /**
  * TERRA VOYAGE - RESULTS PAGE
  * Affichage des résultats de recherche avec filtres et tri
- * Version corrigée pour vols et hôtels
+ * Version corrigée pour vols et hôtels avec conversion de devises
  */
 
 import { api } from '../core/api-client.js';
@@ -20,6 +20,133 @@ const DEFAULT_LOGO = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/sv
 
 // Image par défaut pour les hôtels
 const DEFAULT_HOTEL_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='300' height='200' fill='%23f3f4f6'/%3E%3Ctext x='150' y='100' text-anchor='middle' dy='.3em' fill='%239ca3af'%3E🏨%3C/text%3E%3C/svg%3E";
+
+// Gestionnaire de devises
+const CurrencyManager = {
+    currentCurrency: 'USD',
+    currentSymbol: '$',
+    rates: {
+        USD: 1,
+        EUR: 0.92,
+        GBP: 0.79,
+        CAD: 1.38,
+        XAF: 655.96,
+        CDF: 2850,
+        BTC: 0.000015
+    },
+    
+    symbols: {
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+        CAD: 'CA$',
+        XAF: 'FCFA',
+        CDF: 'FC',
+        BTC: '₿'
+    },
+    
+    init() {
+        const saved = localStorage.getItem('preferred_currency');
+        if (saved && this.rates[saved]) {
+            this.currentCurrency = saved;
+            this.currentSymbol = this.symbols[saved];
+            this.updateDisplay();
+        }
+        this.initSelector();
+    },
+    
+    initSelector() {
+        const btn = document.getElementById('currencyBtn');
+        const dropdown = document.getElementById('currencyDropdown');
+        
+        if (btn && dropdown) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('hidden');
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+            
+            document.querySelectorAll('.currency-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const currency = option.dataset.currency;
+                    const rate = parseFloat(option.dataset.rate);
+                    const symbol = option.querySelector('.text-sm.font-bold')?.innerText || option.dataset.symbol;
+                    
+                    this.setCurrency(currency, rate, symbol);
+                    dropdown.classList.add('hidden');
+                });
+            });
+        }
+    },
+    
+    setCurrency(currency, rate, symbol) {
+        this.currentCurrency = currency;
+        this.currentSymbol = symbol;
+        this.rates[currency] = rate;
+        
+        localStorage.setItem('preferred_currency', currency);
+        
+        this.updateDisplay();
+        this.convertAllPrices();
+        
+        window.dispatchEvent(new CustomEvent('currencyChanged', { 
+            detail: { currency, rate, symbol } 
+        }));
+    },
+    
+    updateDisplay() {
+        const currencySpan = document.getElementById('currentCurrency');
+        if (currencySpan) currencySpan.innerText = this.currentCurrency;
+        
+        const btn = document.getElementById('currencyBtn');
+        if (btn) {
+            const icon = btn.querySelector('.fa-dollar-sign, .fa-euro-sign, .fa-pound-sign, .fa-africa, .fa-bitcoin');
+            if (icon) {
+                if (this.currentCurrency === 'USD') icon.className = 'fas fa-dollar-sign text-xs';
+                else if (this.currentCurrency === 'EUR') icon.className = 'fas fa-euro-sign text-xs';
+                else if (this.currentCurrency === 'GBP') icon.className = 'fas fa-pound-sign text-xs';
+                else if (this.currentCurrency === 'XAF' || this.currentCurrency === 'CDF') icon.className = 'fas fa-africa text-xs';
+                else if (this.currentCurrency === 'BTC') icon.className = 'fab fa-bitcoin text-xs';
+                else icon.className = 'fas fa-dollar-sign text-xs';
+            }
+        }
+    },
+    
+    convertPrice(priceEUR) {
+        if (!priceEUR) return 0;
+        const rate = this.rates[this.currentCurrency];
+        if (this.currentCurrency === 'BTC') return priceEUR * rate;
+        return priceEUR * rate;
+    },
+    
+    formatPrice(priceEUR) {
+        const converted = this.convertPrice(priceEUR);
+        const symbol = this.currentSymbol;
+        
+        if (this.currentCurrency === 'BTC') return `${symbol}${converted.toFixed(8)}`;
+        if (this.currentCurrency === 'XAF' || this.currentCurrency === 'CDF') return `${Math.round(converted).toLocaleString()} ${symbol}`;
+        return `${symbol}${converted.toFixed(2)}`;
+    },
+    
+    convertAllPrices() {
+        document.querySelectorAll('.price-amount').forEach(el => {
+            const priceEUR = parseFloat(el.dataset.eur);
+            if (priceEUR) el.innerText = this.formatPrice(priceEUR);
+        });
+    },
+    
+    updateAllPrices() {
+        document.querySelectorAll('[data-price-eur]').forEach(el => {
+            const priceEUR = parseFloat(el.dataset.priceEur);
+            if (priceEUR) el.innerText = this.formatPrice(priceEUR);
+        });
+    }
+};
 
 // Variables globales
 let currentResults = [];
@@ -109,7 +236,6 @@ function getTimeOfDayCategory(hour) {
 
 function applyFilters(offers) {
     if (!offers || offers.length === 0) return [];
-    var self = this;
     return offers.filter(function(offer) {
         var price = offer.total_amount || offer.intended_total_amount || offer.totalAmount || offer.price || 0;
         if (price > currentFilters.maxPrice) return false;
@@ -270,7 +396,8 @@ function updateRecommendation(offers) {
         
         var price = bestOffer.total_amount || bestOffer.intended_total_amount || bestOffer.price || 0;
         var airlineName = getAirlineName(bestOffer);
-        text.innerHTML = '✈️ ' + airlineName + ' - Dès ' + formatPrice(price) + ' • Meilleur rapport qualité-prix';
+        var formattedPrice = CurrencyManager.formatPrice(price);
+        text.innerHTML = '✈️ ' + airlineName + ' - Dès ' + formattedPrice + ' • Meilleur rapport qualité-prix';
         banner.classList.remove('hidden');
     }
 }
@@ -402,7 +529,6 @@ function formatDurationPT(durationStr) {
     return null;
 }
 
-// Fonctions de navigation vers la page de détails
 function viewFlightDetails(offerId) {
     var offer = null;
     for (var i = 0; i < currentResults.length; i++) {
@@ -505,7 +631,9 @@ function renderFlights(offers) {
                     </div>
                     
                     <div class="text-right min-w-[130px]">
-                        <p class="text-2xl font-bold text-blue-600">${formatPrice(totalAmount, currency)}</p>
+                        <p class="text-2xl font-bold text-blue-600 price-amount" data-eur="${totalAmount}">
+                            ${CurrencyManager.formatPrice(totalAmount)}
+                        </p>
                         <button onclick="viewFlightDetails('${offer.id}')" class="btn-premium w-full mt-3 px-4 py-2 text-[10px]">
                             <i class="fas fa-info-circle mr-1"></i> Voir détails
                         </button>
@@ -551,7 +679,9 @@ function renderHotels(hotels) {
                         </div>
                         <div class="flex justify-between items-end mt-4">
                             <div>
-                                <span class="text-2xl font-bold text-blue-600">${formatPrice(price)}</span>
+                                <span class="text-2xl font-bold text-blue-600 price-amount" data-eur="${price}">
+                                    ${CurrencyManager.formatPrice(price)}
+                                </span>
                                 <span class="text-gray-500">/nuit</span>
                             </div>
                             <button onclick="viewHotelDetails('${hotel.id}')" class="btn-premium px-6 py-2 text-xs">
@@ -571,6 +701,9 @@ function renderHotels(hotels) {
 // ============================================
 
 async function init() {
+    // Initialiser le gestionnaire de devises
+    CurrencyManager.init();
+    
     var searchType = sessionStorage.getItem('search_type') || 'flight';
     var rawData = sessionStorage.getItem('last_search_results');
     var data = rawData ? JSON.parse(rawData) : null;
@@ -646,17 +779,17 @@ async function init() {
     }
 }
 
+// Écouter les changements de devise
+window.addEventListener('currencyChanged', function() {
+    CurrencyManager.updateAllPrices();
+});
+
 // ============================================
 // EXPOSITION GLOBALE
 // ============================================
 
 window.viewFlightDetails = viewFlightDetails;
 window.viewHotelDetails = viewHotelDetails;
-window.bookFlight = function(id) {
-    alert('✨ Réservation du vol en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
-};
-window.bookHotel = function(id) {
-    alert('✨ Réservation de l\'hôtel en cours de préparation.\n\nNotre équipe vous contactera sous 24h.');
-};
+window.CurrencyManager = CurrencyManager;
 
 document.addEventListener('DOMContentLoaded', init);
