@@ -467,7 +467,7 @@ class TerraEngine {
         
         if (mainInput) {
             var placeholders = {
-                flights: 'Paris (CDG), New York (JFK)...',
+                flights: 'Paris, New York, Tokyo...',
                 stays: 'Paris, New York, Tokyo...',
                 cars: 'Aéroport, gare, ville...'
             };
@@ -687,7 +687,7 @@ class TerraEngine {
     }
     
     /**
-     * Effectue la recherche (gère vols, hôtels et voitures)
+     * Effectue la recherche (gère vols, hôtels et voitures) - VERSION CORRIGÉE AVEC AMADEUS
      */
     async performSearch() {
         var originInput = document.getElementById('originInput');
@@ -729,7 +729,7 @@ class TerraEngine {
             var results;
             var searchType;
             
-            // === VOLS ===
+            // === VOLS (avec Amadeus) ===
             if (currentMode === 'flights') {
                 var searchData = {
                     origin: origin,
@@ -743,9 +743,10 @@ class TerraEngine {
                     tripType: state.get('tripType')
                 };
                 
-                console.log('📡 Recherche de vols:', searchData);
+                console.log('📡 Recherche de vols avec Amadeus:', searchData);
                 
-                var response = await fetch(api.baseUrl + '/flights/search-multi', {
+                // ⭐ CORRECTION ICI : Utiliser /flights/search (Amadeus) au lieu de /flights/search-multi
+                var response = await fetch(api.baseUrl + '/flights/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(searchData)
@@ -753,14 +754,6 @@ class TerraEngine {
                 
                 results = await response.json();
                 searchType = 'flight';
-                
-                if (results.search_details) {
-                    console.log('Traduction:', results.search_details);
-                    this.showNotification(
-                        '📍 ' + origin + ' → ' + (results.search_details.origin_codes ? results.search_details.origin_codes.join(', ') : origin) + ' | ' + destination + ' → ' + (results.search_details.destination_codes ? results.search_details.destination_codes.join(', ') : destination),
-                        'success'
-                    );
-                }
                 
                 if (results.count === 0 || !results.flights || results.flights.length === 0) {
                     this.showNotification('Aucun vol trouvé pour ces critères. Essayez d\'autres dates.', 'warning');
@@ -785,7 +778,7 @@ class TerraEngine {
                 
                 console.log('📡 Recherche d\'hôtels:', searchData);
                 
-                var response = await fetch(api.baseUrl + '/stays/search', {
+                var response = await fetch(api.baseUrl + '/hotels/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(searchData)
@@ -794,7 +787,7 @@ class TerraEngine {
                 results = await response.json();
                 searchType = 'hotel';
                 
-                if (results.count === 0 || !results.stays || results.stays.length === 0) {
+                if (results.count === 0 || !results.hotels || results.hotels.length === 0) {
                     this.showNotification('Aucun hôtel trouvé pour ces critères. Essayez d\'autres dates.', 'warning');
                     if (searchBtn) {
                         searchBtn.classList.remove('loading');
@@ -806,7 +799,7 @@ class TerraEngine {
             
             // === VOITURES ===
             else if (currentMode === 'cars') {
-                var response = await fetch(api.baseUrl + '/cars');
+                var response = await fetch(api.baseUrl + '/cars/search');
                 results = await response.json();
                 searchType = 'car';
                 
